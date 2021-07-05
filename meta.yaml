@@ -1,0 +1,38 @@
+{% set name = "pyaln" %}
+{% set version = [x.split("=")[1].strip()   for x in open("setup.cfg") if x.startswith("version =")][0]  %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
+  sha256: 1cb7ec682b761257a561e25c840231e2e38f33f1a78d1b53d3d30bb3cfce0063
+
+build:
+  number: 0
+  noarch: python
+  script: "{{ PYTHON }} -m pip install . -vv"
+
+requirements:
+  host:
+    - pip
+    - python >=3.6
+  run:
+    - python >=3.6
+    - biopython >=1.46
+    - pandas >=1.2
+    - numpy >=1.16
+
+about:
+  home: https://github.com/marco-mariotti/pyaln
+  license: MIT
+  license_family: MIT
+  license_file: 
+  summary: "Read, process, write multiple sequence alignments in Python"
+  doc_url: 
+  dev_url: 
+
+extra:
+  recipe-maintainers:
+    - marco-mariotti

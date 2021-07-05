@@ -11,7 +11,51 @@ __all__=['Alignment']
 class AlignmentError(Exception):
     """ """
 
-class Alignment: #(MultipleSeqAlignment):
+class Alignment: 
+    """This is the mighty alignment class
+
+    Truly, it's very very alignypoweryfully
+    - **parameters**, **types**, **return** and **return types**::
+
+          :param arg1: description
+          :param arg2: description
+          :type arg1: type description
+          :type arg1: type description
+          :return: return description
+          :rtype: the return type description
+
+    - and to provide sections such as **Example** using the double commas syntax::
+
+          :Example:
+
+          followed by a blank line !
+
+      which appears as follow:
+
+      :Example:
+
+      followed by a blank line
+
+    - Finally special sections such as **See Also**, **Warnings**, **Notes**
+      use the sphinx syntax (*paragraph directives*)::
+
+          .. seealso:: blabla
+          .. warnings also:: blabla
+          .. note:: blabla
+          .. todo:: blabla
+
+    .. note::
+        There are many other Info fields but they may be redundant:
+            * param, parameter, arg, argument, key, keyword: Description of a
+              parameter.
+            * type: Type of a parameter.
+            * raises, raise, except, exception: That (and when) a specific
+              exception is raised.
+            * var, ivar, cvar: Description of a variable.
+            * returns, return: Description of the return value.
+            * rtype: Return type.
+
+    """
     extension2format={'fa':'fasta', 'fasta':'fasta',
                       'aln':'clustal', 'clustal':'clustal', 'clw':'clustal',
                       'stk':'stockholm', 'stockholm':'stockholm',
@@ -22,6 +66,12 @@ class Alignment: #(MultipleSeqAlignment):
     max_cache_size=30  # read only at startup, immutable
         
     def __init__(self, file_or_iter=None, fileformat=None,  tuples=None):
+        """And this is how you start.
+
+        Seriously, you start then it gets easier
+        and easier
+
+        """
         self._seqs={}
         self._desc={}
         self._ord =[]

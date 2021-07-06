@@ -1,162 +1,550 @@
 
-<!DOCTYPE html>
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Source documentation &#8212; pyaln 0.0.7 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Source documentation &mdash; pyaln 0.0.8 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to pyaln’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
    
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head><body>
-  
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
           
 
-          <div class="body" role="main">
+          
+            <a href="index.html" class="icon icon-home"> pyaln
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Source documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyaln</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Source documentation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/alignment.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="module-pyaln">
 <span id="source-documentation"></span><h1>Source documentation<a class="headerlink" href="#module-pyaln" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="pyaln.Alignment">
-<em class="property">class </em><code class="sig-prename descclassname">pyaln.</code><code class="sig-name descname">Alignment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_or_iter</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fileformat</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tuples</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyaln.Alignment" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is the mighty alignment class</p>
-<p>Truly, it’s very very alignypoweryfully
-- <strong>parameters</strong>, <strong>types</strong>, <strong>return</strong> and <strong>return types</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">param</span> <span class="n">arg1</span><span class="p">:</span> <span class="n">description</span>
-<span class="p">:</span><span class="n">param</span> <span class="n">arg2</span><span class="p">:</span> <span class="n">description</span>
-<span class="p">:</span><span class="nb">type</span> <span class="n">arg1</span><span class="p">:</span> <span class="nb">type</span> <span class="n">description</span>
-<span class="p">:</span><span class="nb">type</span> <span class="n">arg1</span><span class="p">:</span> <span class="nb">type</span> <span class="n">description</span>
-<span class="p">:</span><span class="k">return</span><span class="p">:</span> <span class="k">return</span> <span class="n">description</span>
-<span class="p">:</span><span class="n">rtype</span><span class="p">:</span> <span class="n">the</span> <span class="k">return</span> <span class="nb">type</span> <span class="n">description</span>
-</pre></div>
-</div>
-<ul>
-<li><p>and to provide sections such as <strong>Example</strong> using the double commas syntax:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>:Example:
-
-followed by a blank line !
-</pre></div>
-</div>
-<p>which appears as follow:</p>
+<em class="property">class </em><code class="sig-prename descclassname">pyaln.</code><code class="sig-name descname">Alignment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_or_iter</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fileformat</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyaln.Alignment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a multiple sequence alignment.</p>
+<p>Alignment can contain sequences of any type (nucleotide, protein, or custom).
+Gaps <strong>must</strong> be encoded as “-“.</p>
+<p>Each entry is uniquely identified by a <em>name</em>, with an optional <em>description</em>.
+Each sequence name is derived from the first word of title in sequence files;
+the remainder of title is taken as description.</p>
+<p>An Alignment can be instanced with a filename (or file buffer), or from any iterable of [title, sequence].
+A variety of file formats are supported, through Bio.AlignIO (see <a class="reference external" href="https://biopython.org/wiki/AlignIO">a full list</a>).
+When a filename or buffer is provided but not the file format, Alignment tries to guess it from the extension.</p>
+<p>You can take easily portions of an Alignment (i.e. take some sequences and/or some columns) by indexing it.
+The format is Alignment[ <em>rows_selector</em>, <em>column_selector</em>], where each selector can be a slice.
+The <em>rows_selector</em> can index by integer (position of sequence name in the alignment), or it can be a list of names instead.
+The <em>column_selector</em> is a integer index or slice. See examples below.</p>
+<p>Iterating over an Alignment will yield tuples like (name, sequence). To get descriptions, use get_desc(name).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Example</dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
-<p>followed by a blank line</p>
-</li>
-<li><p>Finally special sections such as <strong>See Also</strong>, <strong>Warnings</strong>, <strong>Notes</strong>
-use the sphinx syntax (<em>paragraph directives</em>):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">seealso</span><span class="p">::</span> <span class="n">blabla</span>
-<span class="o">..</span> <span class="n">warnings</span> <span class="n">also</span><span class="p">::</span> <span class="n">blabla</span>
-<span class="o">..</span> <span class="n">note</span><span class="p">::</span> <span class="n">blabla</span>
-<span class="o">..</span> <span class="n">todo</span><span class="p">::</span> <span class="n">blabla</span>
-</pre></div>
-</div>
-</li>
-</ul>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<dl class="simple">
-<dt>There are many other Info fields but they may be redundant:</dt><dd><ul class="simple">
-<li><p>param, parameter, arg, argument, key, keyword: Description of a
-parameter.</p></li>
-<li><p>type: Type of a parameter.</p></li>
-<li><p>raises, raise, except, exception: That (and when) a specific
-exception is raised.</p></li>
-<li><p>var, ivar, cvar: Description of a variable.</p></li>
-<li><p>returns, return: Description of the return value.</p></li>
-<li><p>rtype: Return type.</p></li>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_or_iter</strong> (<em>str | TextIO | iterable</em>) – Filename to sequence file to be loaded, or TextIO buffer already opened on it,
+or iterable of [title, seq] objects.</p></li>
+<li><p><strong>fileformat</strong> (<em>str</em><em>, </em><em>optional</em>) – When a filename or TextIO is provided, specifies the file format (e.g. fasta, clustal, stockholm ..)</p></li>
 </ul>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">=</span><span class="n">Alignment</span><span class="p">(</span><span class="s1">&#39;examples/example_ali.fa&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Default representation does not contain descriptions (use Alignment.fasta() for that):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span>
+<span class="go"># Alignment of 6 sequences and 138 positions</span>
+<span class="go">MWLTLVALLALCATGRTAENLSESTTDQDKLVIARGKLVAPSVVGUSIKKMPELYNFLM ... L Fep15_danio_rerio</span>
+<span class="go">MWAFLLLTLAFSATGMTEED-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPALYMFLM ... L Fep15_S_salar</span>
+<span class="go">MWIFLLLTLAFSATGMTEEN-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPELYTFLM ... L Fep15_O_mykiss</span>
+<span class="go">MWAFLVLTFAVAA-GASETV-DNHTAAEEKLLIARGKLLAPSVVGUGIKKMPELHHFLM ... L Fep15_T_rubripess</span>
+<span class="go">MWALLVLTFAVTV-GASEEV-KNQTAAEEKLVIARGTLLAPSVVGUGIKKMPELHHFLM ... L Fep15_T_nigroviridis</span>
+<span class="go">MWAFVLIAFSVGA---SDS------SNSTAEVIARGKLMAPSVVGUAIKKLPELNRFLM ... L Fep15_O_latipes</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">=</span><span class="n">Alignment</span><span class="p">(</span><span class="s1">&#39;examples/example_ali.stockholm&#39;</span><span class="p">,</span> <span class="n">fileformat</span><span class="o">=</span><span class="s1">&#39;stockholm&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span>
+<span class="go"># Alignment of 6 sequences and 138 positions</span>
+<span class="go">MWLTLVALLALCATGRTAENLSESTTDQDKLVIARGKLVAPSVVGUSIKKMPELYNFLM ... L Fep15_danio_rerio</span>
+<span class="go">MWAFLLLTLAFSATGMTEED-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPALYMFLM ... L Fep15_S_salar</span>
+<span class="go">MWIFLLLTLAFSATGMTEEN-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPELYTFLM ... L Fep15_O_mykiss</span>
+<span class="go">MWAFLVLTFAVAA-GASETV-DNHTAAEEKLLIARGKLLAPSVVGUGIKKMPELHHFLM ... L Fep15_T_rubripess</span>
+<span class="go">MWALLVLTFAVTV-GASEEV-KNQTAAEEKLVIARGTLLAPSVVGUGIKKMPELHHFLM ... L Fep15_T_nigroviridis</span>
+<span class="go">MWAFVLIAFSVGA---SDS------SNSTAEVIARGKLMAPSVVGUAIKKLPELNRFLM ... L Fep15_O_latipes</span>
+</pre></div>
+</div>
+<p>Initializing from iterable (in this case a list):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">=</span><span class="n">Alignment</span><span class="p">([</span> <span class="p">(</span><span class="s1">&#39;seq1&#39;</span><span class="p">,</span> <span class="s1">&#39;ATTCG-&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;seq2&#39;</span><span class="p">,</span> <span class="s1">&#39;--TTGG&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;seq3&#39;</span><span class="p">,</span> <span class="s1">&#39;ATTCG-&#39;</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span>
+<span class="go"># Alignment of 3 sequences and 6 positions</span>
+<span class="go">ATTCG- seq1</span>
+<span class="go">--TTGG seq2</span>
+<span class="go">ATTCG- seq3</span>
+</pre></div>
+</div>
+<p>Get alignment of first two sequences only:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="p">[:</span><span class="mi">2</span><span class="p">,:]</span>
+<span class="go"># Alignment of 2 sequences and 6 positions</span>
+<span class="go">ATTCG- seq1</span>
+<span class="go">--TTGG seq2</span>
+</pre></div>
+</div>
+<p>Trim off the first and last alignment columns:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="go"># Alignment of 3 sequences and 4 positions</span>
+<span class="go">TTCG seq1</span>
+<span class="go">-TTG seq2</span>
+<span class="go">TTCG seq3</span>
+</pre></div>
+</div>
+<p>Get subalignment of two sequences, by their name:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="p">[</span> <span class="p">[</span><span class="s1">&#39;seq1&#39;</span><span class="p">,</span> <span class="s1">&#39;seq3&#39;</span><span class="p">],</span> <span class="p">:</span> <span class="p">]</span>
+<span class="go"># Alignment of 2 sequences and 6 positions</span>
+<span class="go">ATTCG- seq1</span>
+<span class="go">ATTCG- seq3</span>
+</pre></div>
+</div>
+<p>Iterating over an alignment:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">name</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">))</span>   <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">ali</span><span class="p">]</span>
+<span class="go">[(&#39;seq1&#39;, 6), (&#39;seq2&#39;, 6), (&#39;seq3&#39;, 6)]</span>
+</pre></div>
 </div>
 <dl class="py method">
 <dt id="pyaln.Alignment.add_seq">
-<code class="sig-name descname">add_seq</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">title</span></em>, <em class="sig-param"><span class="n">sequence</span></em>, <em class="sig-param"><span class="n">desc</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyaln.Alignment.add_seq" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">add_seq</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">title</span></em>, <em class="sig-param"><span class="n">sequence</span></em>, <em class="sig-param"><span class="n">desc</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">index</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyaln.Alignment.add_seq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a sequence to the alignment.</p>
+<p>The sequence name (i.e., its unique id) is derived from title, taking its first word.
+The rest of title is taken as sequence description.
+By default, the sequence is added to the bottom of the alignment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>title</strong> (<em>str</em>) – Sequence title, from which name and description are derived</p></li>
+<li><p><strong>sequence</strong> (<em>str</em>) – Actual sequence, with gaps encoded as “-” characters</p></li>
+<li><p><strong>desc</strong> (<em>str</em><em>, </em><em>optional</em>) – The description can be directly provided here. If so, title is taken as name instead</p></li>
+<li><p><strong>index</strong> (<em>int</em><em>, </em><em>optional</em>) – The position at which the sequence is inserted. If not provided, it goes last</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">=</span><span class="n">Alignment</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">.</span><span class="n">add_seq</span><span class="p">(</span><span class="s1">&#39;seq1 custom nt seq&#39;</span><span class="p">,</span> <span class="s1">&#39;ATTCG-&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">.</span><span class="n">add_seq</span><span class="p">(</span><span class="s1">&#39;seq2 another seq&#39;</span><span class="p">,</span>   <span class="s1">&#39;--TTGG&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ali</span><span class="o">.</span><span class="n">fasta</span><span class="p">())</span>
+<span class="go">&gt;seq1 custom nt seq</span>
+<span class="go">ATTCG-</span>
+<span class="go">&gt;seq2 another seq</span>
+<span class="go">--TTGG</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">.</span><span class="n">add_seq</span><span class="p">(</span><span class="s1">&#39;seq3&#39;</span><span class="p">,</span> <span class="s1">&#39;ATT---&#39;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;some desc&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">.</span><span class="n">add_seq</span><span class="p">(</span><span class="s1">&#39;seq4&#39;</span><span class="p">,</span> <span class="s1">&#39;ATTGG-&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ali</span><span class="o">.</span><span class="n">fasta</span><span class="p">())</span>
+<span class="go">&gt;seq4</span>
+<span class="go">ATTGG-</span>
+<span class="go">&gt;seq1 custom nt seq</span>
+<span class="go">ATTCG-</span>
+<span class="go">&gt;seq2 another seq</span>
+<span class="go">--TTGG</span>
+<span class="go">&gt;seq3 some desc</span>
+<span class="go">ATT---</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyaln.Alignment.ali_length">
+<code class="sig-name descname">ali_length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyaln.Alignment.ali_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of columns in the alignment (i.e., its width)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The number of columns in the alignment</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">=</span><span class="n">Alignment</span><span class="p">([</span> <span class="p">(</span><span class="s1">&#39;seq1&#39;</span><span class="p">,</span> <span class="s1">&#39;ATTCG-&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;seq2&#39;</span><span class="p">,</span> <span class="s1">&#39;--TTGG&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;seq3&#39;</span><span class="p">,</span> <span class="s1">&#39;ATTCG-&#39;</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">.</span><span class="n">ali_length</span><span class="p">()</span>
+<span class="go">6</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For best performance speed, the Alignment class does not check that all sequences have the same length.
+This method simply returns the length of the first sequence.
+To check for homogenous sequence length, see same_length()</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#pyaln.Alignment.same_length" title="pyaln.Alignment.same_length"><code class="xref py py-meth docutils literal notranslate"><span class="pre">same_length()</span></code></a></dt><dd><p>check that all sequences are truly aligned, i.e. have the same length</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyaln.Alignment.get_desc">
+<code class="sig-name descname">get_desc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyaln.Alignment.get_desc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the description for a sequence entry</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The name (i.e. identifier) of the sequence</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The description stored for the sequence</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">=</span><span class="n">Alignment</span><span class="p">([</span> <span class="p">(</span><span class="s1">&#39;seq1 this is first&#39;</span><span class="p">,</span> <span class="s1">&#39;ATTCG-&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;seq2 this is 2nd&#39;</span>  <span class="p">,</span> <span class="s1">&#39;--TTGG&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;seq3&#39;</span><span class="p">,</span>               <span class="s1">&#39;ATTCG-&#39;</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">.</span><span class="n">get_desc</span><span class="p">(</span><span class="s1">&#39;seq1&#39;</span><span class="p">)</span>
+<span class="go">&#39;this is first&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">.</span><span class="n">get_desc</span><span class="p">(</span><span class="s1">&#39;seq3&#39;</span><span class="p">)</span>
+<span class="go">&#39;&#39;</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#pyaln.Alignment.set_desc" title="pyaln.Alignment.set_desc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_desc()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyaln.Alignment.n_seqs">
+<code class="sig-name descname">n_seqs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyaln.Alignment.n_seqs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of sequences in the alignment (i.e. the number of rows, or alignment height)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of sequences in the alignment</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">=</span><span class="n">Alignment</span><span class="p">([</span> <span class="p">(</span><span class="s1">&#39;seq1&#39;</span><span class="p">,</span> <span class="s1">&#39;ATTCG-&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;seq2&#39;</span><span class="p">,</span> <span class="s1">&#39;--TTGG&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;seq3&#39;</span><span class="p">,</span> <span class="s1">&#39;ATTCG-&#39;</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">.</span><span class="n">n_seqs</span><span class="p">()</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#pyaln.Alignment.ali_length" title="pyaln.Alignment.ali_length"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ali_length()</span></code></a></dt><dd><p>length of the alignment (i.e. number of columns)</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyaln.Alignment.same_length">
+<code class="sig-name descname">same_length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyaln.Alignment.same_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether sequences are aligned, i.e. they have the same length</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Stating if all sequences have the same lengths</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">=</span><span class="n">Alignment</span><span class="p">([</span> <span class="p">(</span><span class="s1">&#39;seq1&#39;</span><span class="p">,</span> <span class="s1">&#39;ATTCG-&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;seq2&#39;</span><span class="p">,</span> <span class="s1">&#39;--TTGG&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;seq3&#39;</span><span class="p">,</span> <span class="s1">&#39;ATTCG-&#39;</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">.</span><span class="n">same_length</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">.</span><span class="n">add_seq</span><span class="p">(</span><span class="s1">&#39;seqX&#39;</span><span class="p">,</span> <span class="s1">&#39;TATTCGGT-&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">.</span><span class="n">same_length</span><span class="p">()</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#pyaln.Alignment.ali_length" title="pyaln.Alignment.ali_length"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ali_length()</span></code></a></dt><dd><p>length of the alignment (i.e. number of columns)</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyaln.Alignment.set_desc">
+<code class="sig-name descname">set_desc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">desc</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyaln.Alignment.set_desc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the description of an entry in-place.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – The name (i.e. identifier) of the entry to be altered</p></li>
+<li><p><strong>desc</strong> (<em>str</em>) – The new description to be used</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">=</span><span class="n">Alignment</span><span class="p">([</span> <span class="p">(</span><span class="s1">&#39;seq1 this is first&#39;</span><span class="p">,</span> <span class="s1">&#39;ATTCG-&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;seq2 this is 2nd&#39;</span>  <span class="p">,</span> <span class="s1">&#39;--TTGG&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;seq3 not sure&#39;</span><span class="p">,</span>   <span class="s1">&#39;ATTCG-&#39;</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ali</span><span class="o">.</span><span class="n">fasta</span><span class="p">())</span>
+<span class="go">&gt;seq1 this is first</span>
+<span class="go">ATTCG-</span>
+<span class="go">&gt;seq2 this is 2nd</span>
+<span class="go">--TTGG</span>
+<span class="go">&gt;seq3 not sure</span>
+<span class="go">ATTCG-</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">.</span><span class="n">set_desc</span><span class="p">(</span><span class="s1">&#39;seq3&#39;</span><span class="p">,</span> <span class="s1">&#39;obviously third&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ali</span><span class="o">.</span><span class="n">fasta</span><span class="p">())</span>
+<span class="go">&gt;seq1 this is first</span>
+<span class="go">ATTCG-</span>
+<span class="go">&gt;seq2 this is 2nd</span>
+<span class="go">--TTGG</span>
+<span class="go">&gt;seq3 obviously third</span>
+<span class="go">ATTCG-</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyaln.Alignment.set_seq">
+<code class="sig-name descname">set_seq</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">sequence</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyaln.Alignment.set_seq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the sequence of an entry in-place.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – The name (i.e. identifier) of the sequence to be altered</p></li>
+<li><p><strong>sequence</strong> (<em>str</em>) – The new sequence to be set</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">=</span><span class="n">Alignment</span><span class="p">([</span> <span class="p">(</span><span class="s1">&#39;seq1&#39;</span><span class="p">,</span> <span class="s1">&#39;ATTCG-&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;seq2&#39;</span><span class="p">,</span> <span class="s1">&#39;--TTGG&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;seq3&#39;</span><span class="p">,</span> <span class="s1">&#39;ATTCG-&#39;</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span>
+<span class="go"># Alignment of 3 sequences and 6 positions</span>
+<span class="go">ATTCG- seq1</span>
+<span class="go">--TTGG seq2</span>
+<span class="go">ATTCG- seq3</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span><span class="o">.</span><span class="n">set_seq</span><span class="p">(</span><span class="s1">&#39;seq1&#39;</span><span class="p">,</span> <span class="s1">&#39;CHANGE&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ali</span>
+<span class="go"># Alignment of 3 sequences and 6 positions</span>
+<span class="go">CHANGE seq1</span>
+<span class="go">--TTGG seq2</span>
+<span class="go">ATTCG- seq3</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#pyaln.Alignment.add_seq" title="pyaln.Alignment.add_seq"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_seq()</span></code></a>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">get_seq()</span></code></p>
+</div>
+</dd></dl>
 
 </dd></dl>
 
 </div>
 
 
+           </div>
+           
           </div>
-          
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to pyaln’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Marco Mariotti.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">pyaln</a></h1>
 
+    </section>
 
+  </div>
+  
 
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
 
-
-
-
-
-<h3>Navigation</h3>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2021, Marco Mariotti.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-      |
-      <a href="_sources/alignment.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
-
+  
+  
     
+   
 
-    
-  </body>
+</body>
 </html>

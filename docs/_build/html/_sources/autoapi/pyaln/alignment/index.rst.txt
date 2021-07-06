@@ -1,0 +1,279 @@
+:mod:`pyaln.alignment`
+======================
+
+.. py:module:: pyaln.alignment
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyaln.alignment.Alignment
+
+
+
+.. py:class:: Alignment(file_or_iter=None, fileformat=None)
+
+   This is the mighty alignment class
+
+   Truly, it's very very alignypoweryfully
+   - **parameters**, **types**, **return** and **return types**::
+
+         :param arg1: description
+         :param arg2: description
+         :type arg1: type description
+         :type arg1: type description
+         :return: return description
+         :rtype: the return type description
+
+   - and to provide sections such as **Example** using the double commas syntax::
+
+         :Example:
+
+         followed by a blank line !
+
+     which appears as follow:
+
+     :Example:
+
+     followed by a blank line
+
+   - Finally special sections such as **See Also**, **Warnings**, **Notes**
+     use the sphinx syntax (*paragraph directives*)::
+
+         .. seealso:: blabla
+         .. warnings also:: blabla
+         .. note:: blabla
+         .. todo:: blabla
+
+   .. note::
+       There are many other Info fields but they may be redundant:
+           * param, parameter, arg, argument, key, keyword: Description of a
+             parameter.
+           * type: Type of a parameter.
+           * raises, raise, except, exception: That (and when) a specific
+             exception is raised.
+           * var, ivar, cvar: Description of a variable.
+           * returns, return: Description of the return value.
+           * rtype: Return type.
+
+   .. attribute:: extension2format
+      
+
+      
+
+   .. attribute:: max_names_repr
+      :annotation: = 15
+
+      
+
+   .. attribute:: max_sequence_repr
+      :annotation: = 60
+
+      
+
+   .. attribute:: max_cache_size
+      :annotation: = 30
+
+      
+
+   .. method:: __iter__(self)
+
+
+   .. method:: __eq__(self, other)
+
+      Return self==value.
+
+
+   .. method:: __hash__(self)
+
+      Return hash(self).
+
+
+   .. method:: __repr__(self)
+
+      Return repr(self).
+
+
+   .. method:: _oneliner(self, name)
+
+
+   .. method:: __getitem__(self, rows_and_cols)
+
+      indexed with tuple rows, cols
+      rows can be a slice, or a list of names in the alignment
+
+
+   .. method:: add_seq(self, title, sequence, desc=None, index=None)
+
+      Add a sequence to the alignment.
+
+      The sequence name (i.e., its unique id) is derived from title, taking its first word.
+      The rest of title is taken  as sequence description.
+      By default, the sequence is added to the bottom of the alignment.
+
+      :param title: Sequence title, from which name and description are derived
+      :type title: str
+      :param sequence: Actual sequence, with gaps encoded as "-" characters
+      :type sequence: str
+      :param desc: The description can be directly provided here. If so, title is taken as name instead
+      :type desc: str, optional
+      :param index: The position at which the sequence is inserted. If not provided, it goes last
+      :type index: int, optional
+
+      :returns:
+      :rtype: None
+
+      .. rubric:: Examples
+
+      >>> ali=Alignment()
+      >>> ali.add_seq('seq1 custom nt seq', 'ATTCG-')
+      >>> ali.add_seq('seq2 another seq',   '--TTGG')
+      >>> print(ali.fasta())
+      >seq1 custom nt seq
+      ATTCG-
+      >seq2 another seq
+      --TTGG
+
+      >>> ali.add_seq('seq3', 'ATT---', desc='some desc')
+      >>> ali.add_seq('seq4', 'ATTGG-', index=0)
+      >>> print(ali.fasta())
+      >seq4
+      ATTGG-
+      >seq1 custom nt seq
+      ATTCG-
+      >seq2 another seq
+      --TTGG
+      >seq3 some desc
+      ATT---
+
+
+   .. method:: ali_length(self)
+
+      Returns the number of columns in the alignment (i.e., its width)
+
+      :returns: The number of columns in the alignment
+      :rtype: int
+
+      .. rubric:: Examples
+
+      >>> ali=Alignment([ ('seq1', 'ATTCG-'), ('seq2', '--TTGG'),
+                          ('seq3', 'ATTCG-)])
+      >>> ali.ali_length()
+      5
+
+      .. note::
+
+         For best performance speed, the Alignment class does not check that all sequences have the same length.
+         This method simply returns the length of the first sequence.
+         To check for homogenous sequence length, see same_length()
+
+         .. seealso::
+         pyaln.Alignment.same_length: check that all sequences are aligned, i.e. have the same length
+
+
+   .. method:: same_length(self)
+
+      Check whether sequences are aligned, i.e. they have the same length
+
+      :returns: Stating if all sequences have the same lengths
+      :rtype: bool
+
+      .. rubric:: Examples
+
+      >>> ali=Alignment([ ('seq1', 'ATTCG-'), ('seq2', '--TTGG'),
+                          ('seq3', 'ATTCG-)])
+      >>> ali.same_length()
+      True
+
+      >>> ali.add_seq('seqX', 'TATTCGGT-')
+      >>> ali.same_length()
+      False
+
+      .. seealso::
+      pyaln.Alignment.ali_length_: length of the alignment (number of positions)
+
+
+   .. method:: n_seqs(self)
+
+
+   .. method:: set_seq(self, name, sequence)
+
+
+   .. method:: set_desc(self, name, desc)
+
+
+   .. method:: get_desc(self, name)
+
+
+   .. method:: get_seq(self, name)
+
+
+   .. method:: names(self)
+
+
+   .. method:: sequences(self)
+
+
+   .. method:: has_name(self, name)
+
+
+   .. method:: fasta(self, nchar=60)
+
+
+   .. method:: concatenate(self, other)
+
+
+   .. method:: copy(self)
+
+
+   .. method:: remove_seq(self, *names)
+
+
+   .. method:: remove_by_index(self, *seqindices)
+
+
+   .. method:: remove_empty_seqs(self)
+
+
+   .. method:: to_biopython(self)
+
+
+   .. method:: to_numpy(self)
+
+
+   .. method:: to_pandas(self, save=False)
+
+
+   .. method:: conservation_by_column(self)
+
+
+   .. method:: write(self, fileformat='fasta')
+
+
+   .. method:: write_to_file(self, file_or_buff, fileformat='fasta')
+
+
+   .. method:: convert_sequences(self, seqfn)
+
+
+   .. method:: trim_gaps(self, pct=1.0, inplace=False)
+
+
+   .. method:: consensus(self)
+
+
+   .. method:: gap_mask(self)
+
+
+   .. method:: terminal_gap_mask(self)
+
+
+   .. method:: _temp_cons(self)
+
+
+

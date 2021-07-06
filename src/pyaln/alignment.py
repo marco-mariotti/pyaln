@@ -5,37 +5,16 @@ from Bio.SeqRecord import SeqRecord
 import pandas as pd
 import numpy as np
 from functools import lru_cache
+from typing import Union, TextIO
+
 
 __all__=['Alignment']
 
 class AlignmentError(Exception):
     """ """
 
-class Alignment: 
-    """This is the mighty alignment class
 
-    Truly, it's very very alignypoweryfully
-    - **parameters**, **types**, **return** and **return types**::
-
-          :param arg1: description
-          :param arg2: description
-          :type arg1: type description
-          :type arg1: type description
-          :return: return description
-          :rtype: the return type description
-
-    - and to provide sections such as **Example** using the double commas syntax::
-
-          :Example:
-
-          followed by a blank line !
-
-      which appears as follow:
-
-      :Example:
-
-      followed by a blank line
-
+"""
     - Finally special sections such as **See Also**, **Warnings**, **Notes**
       use the sphinx syntax (*paragraph directives*)::
 
@@ -54,8 +33,109 @@ class Alignment:
             * var, ivar, cvar: Description of a variable.
             * returns, return: Description of the return value.
             * rtype: Return type.
+"""
+    
+class Alignment: 
+    """Represents a multiple sequence alignment.
 
+    Alignment can contain sequences of any type (nucleotide, protein, or custom).
+    Gaps **must** be encoded as "-".
+
+    Each entry is uniquely identified by a *name*, with an optional *description*.
+    Each sequence name is derived from the first word of title in sequence files; 
+    the remainder of title is taken as description.
+
+    An Alignment can be instanced with a filename (or file buffer), or from any iterable of [title, sequence].
+    A variety of file formats are supported, through Bio.AlignIO (see `a full list  <https://biopython.org/wiki/AlignIO>`_).    
+    When a filename or buffer is provided but not the file format, Alignment tries to guess it from the extension.
+
+    You can take easily portions of an Alignment (i.e. take some sequences and/or some columns) by indexing it.
+    The format is Alignment[ *rows_selector*, *column_selector*], where each selector can be a slice. 
+    The *rows_selector* can index by integer (position of sequence name in the alignment), or it can be a list of names instead.
+    The *column_selector* is a integer index or slice. See examples below. 
+
+    Iterating over an Alignment will yield tuples like (name, sequence). To get descriptions, use get_desc(name).
+
+    Parameters
+    ----------
+    file_or_iter : str | TextIO | iterable
+        Filename to sequence file to be loaded, or TextIO buffer already opened on it, 
+        or iterable of [title, seq] objects.
+    fileformat : str, optional
+        When a filename or TextIO is provided, specifies the file format (e.g. fasta, clustal, stockholm ..)
+
+    Examples
+    --------
+
+    >>> ali=Alignment('examples/example_ali.fa')
+
+    Default representation does not contain descriptions (use Alignment.fasta() for that):
+
+    >>> ali
+    # Alignment of 6 sequences and 138 positions
+    MWLTLVALLALCATGRTAENLSESTTDQDKLVIARGKLVAPSVVGUSIKKMPELYNFLM ... L Fep15_danio_rerio
+    MWAFLLLTLAFSATGMTEED-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPALYMFLM ... L Fep15_S_salar
+    MWIFLLLTLAFSATGMTEEN-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPELYTFLM ... L Fep15_O_mykiss
+    MWAFLVLTFAVAA-GASETV-DNHTAAEEKLLIARGKLLAPSVVGUGIKKMPELHHFLM ... L Fep15_T_rubripess
+    MWALLVLTFAVTV-GASEEV-KNQTAAEEKLVIARGTLLAPSVVGUGIKKMPELHHFLM ... L Fep15_T_nigroviridis
+    MWAFVLIAFSVGA---SDS------SNSTAEVIARGKLMAPSVVGUAIKKLPELNRFLM ... L Fep15_O_latipes
+    <BLANKLINE>
+
+    >>> ali=Alignment('examples/example_ali.stockholm', fileformat='stockholm')
+    >>> ali
+    # Alignment of 6 sequences and 138 positions
+    MWLTLVALLALCATGRTAENLSESTTDQDKLVIARGKLVAPSVVGUSIKKMPELYNFLM ... L Fep15_danio_rerio
+    MWAFLLLTLAFSATGMTEED-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPALYMFLM ... L Fep15_S_salar
+    MWIFLLLTLAFSATGMTEEN-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPELYTFLM ... L Fep15_O_mykiss
+    MWAFLVLTFAVAA-GASETV-DNHTAAEEKLLIARGKLLAPSVVGUGIKKMPELHHFLM ... L Fep15_T_rubripess
+    MWALLVLTFAVTV-GASEEV-KNQTAAEEKLVIARGTLLAPSVVGUGIKKMPELHHFLM ... L Fep15_T_nigroviridis
+    MWAFVLIAFSVGA---SDS------SNSTAEVIARGKLMAPSVVGUAIKKLPELNRFLM ... L Fep15_O_latipes
+    <BLANKLINE>
+
+    Initializing from iterable (in this case a list):
+
+    >>> ali=Alignment([ ('seq1', 'ATTCG-'), ('seq2', '--TTGG'), ('seq3', 'ATTCG-')])    
+    >>> ali
+    # Alignment of 3 sequences and 6 positions
+    ATTCG- seq1
+    --TTGG seq2
+    ATTCG- seq3
+    <BLANKLINE>
+
+    Indexing an alignment
+    =====================
+
+    Get alignment of first two sequences only:
+
+    >>> ali[:2,:]
+    # Alignment of 2 sequences and 6 positions
+    ATTCG- seq1
+    --TTGG seq2
+    <BLANKLINE>
+
+    Trim off the first and last alignment columns:
+
+    >>> ali[:,1:-1]
+    # Alignment of 3 sequences and 4 positions
+    TTCG seq1
+    -TTG seq2
+    TTCG seq3
+    <BLANKLINE>
+
+    Get subalignment of two sequences, by their name:
+
+    >>> ali[ ['seq1', 'seq3'], : ]
+    # Alignment of 2 sequences and 6 positions
+    ATTCG- seq1
+    ATTCG- seq3
+    <BLANKLINE>
+
+    Iterating over an alignment:
+
+    >>> [(name, len(seq))   for name, seq in ali]
+    [('seq1', 6), ('seq2', 6), ('seq3', 6)]
     """
+
     extension2format={'fa':'fasta', 'fasta':'fasta',
                       'aln':'clustal', 'clustal':'clustal', 'clw':'clustal',
                       'stk':'stockholm', 'stockholm':'stockholm',
@@ -65,13 +145,7 @@ class Alignment:
     max_sequence_repr=60
     max_cache_size=30  # read only at startup, immutable
         
-    def __init__(self, file_or_iter=None, fileformat=None,  tuples=None):
-        """And this is how you start.
-
-        Seriously, you start then it gets easier
-        and easier
-
-        """
+    def __init__(self, file_or_iter=None, fileformat=None):
         self._seqs={}
         self._desc={}
         self._ord =[]
@@ -156,8 +230,57 @@ class Alignment:
                         desc=self.get_desc(name))
         return(ali)
 
-    def add_seq(self, title, sequence, desc=None):
-        """ """
+    def add_seq(self, title, sequence, desc=None, index=None):
+        """Add a sequence to the alignment.
+
+        The sequence name (i.e., its unique id) is derived from title, taking its first word. 
+        The rest of title is taken as sequence description. 
+        By default, the sequence is added to the bottom of the alignment. 
+
+        Parameters
+        ----------
+        title : str
+            Sequence title, from which name and description are derived
+        sequence: str
+            Actual sequence, with gaps encoded as "-" characters
+        desc : str, optional
+            The description can be directly provided here. If so, title is taken as name instead
+        index : int, optional
+            The position at which the sequence is inserted. If not provided, it goes last
+
+        Returns
+        -------
+        None
+            None
+
+
+        Examples
+        --------
+
+        >>> ali=Alignment()
+        >>> ali.add_seq('seq1 custom nt seq', 'ATTCG-')
+        >>> ali.add_seq('seq2 another seq',   '--TTGG')
+        >>> print(ali.fasta())
+        >seq1 custom nt seq
+        ATTCG-
+        >seq2 another seq
+        --TTGG
+        <BLANKLINE>
+
+        >>> ali.add_seq('seq3', 'ATT---', desc='some desc')
+        >>> ali.add_seq('seq4', 'ATTGG-', index=0)
+        >>> print(ali.fasta())
+        >seq4
+        ATTGG-
+        >seq1 custom nt seq
+        ATTCG-
+        >seq2 another seq
+        --TTGG
+        >seq3 some desc
+        ATT---
+        <BLANKLINE>
+        """
+        
         if desc is None:
             name=title.split(sep=None, maxsplit=1)[0]
             desc=title[len(name)+1:].strip()
@@ -167,26 +290,202 @@ class Alignment:
             raise AlignmentError(f'add_seq ERROR alignment already has {name}. Did you mean to use set_seq() instead?')
         self._seqs [name] = sequence
         self._desc [name] = desc
-        self._ord.append(name)
+        if index is None:
+            self._ord.append(name)
+        else:
+            self._ord.insert(index, name)
 
         
     def ali_length(self):
+        """Returns the number of columns in the alignment (i.e., its width) 
+
+        Returns
+        -------
+        int 
+            The number of columns in the alignment
+
+
+        Examples
+        --------
+        >>> ali=Alignment([ ('seq1', 'ATTCG-'), ('seq2', '--TTGG'), ('seq3', 'ATTCG-')])
+        >>> ali.ali_length()
+        6
+
+        Note
+        ----
+        For best performance speed, the Alignment class does not check that all sequences have the same length.
+        This method simply returns the length of the first sequence.
+        To check for homogenous sequence length, see same_length()
+
+        See Also
+        --------
+        same_length: check that all sequences are truly aligned, i.e. have the same length  
+
+        """                
         return len(self.get_seq(self._ord[0])) if self._ord else 0
 
+    def same_length(self):
+        """Check whether sequences are aligned, i.e. they have the same length
+
+        Returns
+        -------
+        bool 
+            Stating if all sequences have the same lengths
+
+        Examples
+        --------
+        >>> ali=Alignment([ ('seq1', 'ATTCG-'), ('seq2', '--TTGG'), ('seq3', 'ATTCG-')])
+        >>> ali.same_length()
+        True
+
+        >>> ali.add_seq('seqX', 'TATTCGGT-')
+        >>> ali.same_length()
+        False
+
+        See Also
+        --------
+        ali_length: length of the alignment (i.e. number of columns)
+
+        """                
+                
+        if not self.n_seqs: return True
+        lenfirst=len( self.get_seq(self._ord[0]) )
+        for name in self._ord[1:]:
+            if lenfirst != len(self.get_seq(name)):
+                return False
+        return True
+
     def n_seqs(self):
+        """Returns the number of sequences in the alignment (i.e. the number of rows, or alignment height)
+
+        Returns
+        -------
+        int
+            Number of sequences in the alignment
+
+        Examples
+        --------
+        >>> ali=Alignment([ ('seq1', 'ATTCG-'), ('seq2', '--TTGG'), ('seq3', 'ATTCG-')])
+        >>> ali.n_seqs()
+        3
+
+        See Also
+        --------
+        ali_length: length of the alignment (i.e. number of columns)
+        """
         return len(self._ord)
         
     def set_seq(self, name, sequence):
+        """Change the sequence of an entry in-place.
+
+        Parameters
+        ----------
+
+        name : str
+            The name (i.e. identifier) of the sequence to be altered
+        sequence : str
+            The new sequence to be set
+
+        Returns
+        -------
+        None
+            None
+
+        Examples
+        --------
+        >>> ali=Alignment([ ('seq1', 'ATTCG-'), ('seq2', '--TTGG'), ('seq3', 'ATTCG-')])
+        >>> ali
+        # Alignment of 3 sequences and 6 positions
+        ATTCG- seq1
+        --TTGG seq2
+        ATTCG- seq3
+        <BLANKLINE>
+
+        >>> ali.set_seq('seq1', 'CHANGE')
+        >>> ali 
+        # Alignment of 3 sequences and 6 positions
+        CHANGE seq1
+        --TTGG seq2
+        ATTCG- seq3
+        <BLANKLINE>
+        
+        See Also
+        --------
+        add_seq, get_seq
+        """       
         if not self.has_name(name):
             raise AlignmentError(f'set_seq ERROR alignment does not have {name}. Did you mean to use add_seq() instead?')
         self._seqs[name]=sequence
 
     def set_desc(self, name, desc):
+        """Change the description of an entry in-place.
+
+        Parameters
+        ----------
+
+        name : str
+            The name (i.e. identifier) of the entry to be altered
+        desc : str
+            The new description to be used
+
+        Returns
+        -------
+        None
+            None
+
+        Examples
+        --------
+        >>> ali=Alignment([ ('seq1 this is first', 'ATTCG-'), ('seq2 this is 2nd'  , '--TTGG'), ('seq3 not sure',   'ATTCG-')])
+        >>> print(ali.fasta())
+        >seq1 this is first
+        ATTCG-
+        >seq2 this is 2nd
+        --TTGG
+        >seq3 not sure
+        ATTCG-
+        <BLANKLINE>
+
+        >>> ali.set_desc('seq3', 'obviously third')
+        >>> print(ali.fasta())
+        >seq1 this is first
+        ATTCG-
+        >seq2 this is 2nd
+        --TTGG
+        >seq3 obviously third
+        ATTCG-
+        <BLANKLINE>
+        """       
         if not self.has_name(name):
             raise AlignmentError(f'set_desc ERROR alignment does not have {name}. Did you mean to use add_seq() instead?')
         self._desc[name]=desc            
 
     def get_desc(self, name):
+        """Returns the description for a sequence entry
+
+        Parameters
+        ----------
+
+        name : str
+            The name (i.e. identifier) of the sequence
+
+        Returns
+        -------
+        str
+            The description stored for the sequence
+
+        Examples
+        --------
+        >>> ali=Alignment([ ('seq1 this is first', 'ATTCG-'), ('seq2 this is 2nd'  , '--TTGG'), ('seq3',               'ATTCG-')])
+        >>> ali.get_desc('seq1')
+        'this is first'
+        >>> ali.get_desc('seq3')
+        ''
+                
+        See Also
+        --------
+        set_desc
+        """       
+
         if not name in self._desc:
             raise AlignmentError(f'get_desc ERROR alignment does not have {name}')
         return self._desc[name]
@@ -243,9 +542,9 @@ class Alignment:
             del self._desc[name]
 
     def remove_empty_seqs(self):        
-        empty_seq_names=numpy.array(self.names())[  # next: boolean array, True when all gaps
-            numpy.char.equal(
-                numpy.array( [numpy.array(seq, dtype=numpy.str_) for name, seq in self], dtype=numpy.str_ ),
+        empty_seq_names=np.array(self.names())[  # next: boolean array, True when all gaps
+            np.char.equal(
+                np.array( [np.array(seq, dtype=np.str_) for name, seq in self], dtype=np.str_ ),
                 '-'*self.ali_length())                ]
         self.remove_seq(*empty_seq_names)        
             
@@ -263,7 +562,7 @@ class Alignment:
 
     @lru_cache(maxsize=max_cache_size)
     def to_numpy(self):
-        return numpy.array( [numpy.array(list(seq), dtype=numpy.str_) for name, seq in self], dtype=numpy.str_ )
+        return np.array( [np.array(list(seq), dtype=np.str_) for name, seq in self], dtype=np.str_ )
 
     def to_pandas(self, save=False):
         return pd.DataFrame( self.to_numpy() )
@@ -327,7 +626,7 @@ class Alignment:
         return np.apply_along_axis(
             # below: each bool array is as long as sequence;  function is applied to each row
                       #  bool array: is left term gap? # or # bool array: is right term gap?            
-            lambda x: ( numpy.logical_and.accumulate(x)  |  numpy.logical_and.accumulate( x[::-1] )[::-1] ),
+            lambda x: ( np.logical_and.accumulate(x)  |  np.logical_and.accumulate( x[::-1] )[::-1] ),
             1,  self.gap_mask())
         #tested: per row is faster than whole matrix
     
@@ -392,3 +691,15 @@ class Alignment:
         ## average sequence identity per sequence
         res.groupby(res.index).conservation.mean()
 
+
+
+        
+if __name__ == "__main__":
+    import doctest
+    def setup_of_test():
+        olddir = os.getcwd()  # save the current working directory
+        thepath = os.path.abspath(__file__)
+        os.chdir(thepath)
+    
+    doctest.DocTestSuite(setUp=setup_of_test) #, tearDown=tearDown)
+            

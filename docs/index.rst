@@ -9,15 +9,15 @@ Welcome to pyaln's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+	     
+   alignment
+
+Alignment
+=========
+The core of pyaln is the Alignment class, which provides access to convenient methods for reading, processing, and writing alignments.
 
 
-Test
-====
-something something
-
-alignment.rst
-
-
+     
 
 Indices and tables
 ==================

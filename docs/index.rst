@@ -10,7 +10,12 @@ Welcome to pyaln's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   alignment.rst
+
+Test
+====
+something something
+
+alignment.rst
 
 
 

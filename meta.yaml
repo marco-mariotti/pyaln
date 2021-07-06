@@ -1,5 +1,5 @@
 {% set name = "pyaln" %}
-{% set version = [x.split("=")[1].strip()   for x in open("setup.cfg") if x.startswith("version =")][0]  %}
+{% set version = load_setup_py_data().version %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
-  sha256: 1cb7ec682b761257a561e25c840231e2e38f33f1a78d1b53d3d30bb3cfce0063
+
 
 build:
   number: 0

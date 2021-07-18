@@ -3,7 +3,10 @@ from functools import lru_cache
 from typing import Union, TextIO
 import pandas as pd
 import numpy as np
+import statistics
 from Bio import SeqIO, AlignIO, Seq, SeqRecord, Align
+from .sequtils import *
+
 
 MultipleSeqAlignment=Align.MultipleSeqAlignment
 SeqRecord=SeqRecord.SeqRecord
@@ -1009,8 +1012,8 @@ class Alignment:
         if use_names: p.index=self.names()
         return p
 
-    @lru_cache(maxsize=max_cache_size)
-    def conservation_by_column(self):
+
+    def conservation_map(self, counts=None):
         """Computes the frequency of characters (nucleotides/amino acids) at each column of the alignment
 
         Gaps are considered as any other character during computation.        
@@ -1028,7 +1031,7 @@ class Alignment:
         Examples
         --------
         >>> ali= Alignment([ ('seq1 first', 'ATTCG-'), ('seq2 this is 2nd'  , '--TTGG'), ('seq3', '--TT--')])
-        >>> ali.conservation_by_column()
+        >>> ali.conservation_map()
                   0         1    2         3         4         5
         -  0.666667  0.666667  0.0  0.000000  0.333333  0.666667
         A  0.333333  0.000000  0.0  0.000000  0.000000  0.000000
@@ -1040,8 +1043,17 @@ class Alignment:
         ------
         This function is cached for best performance. Thus, do not directly modify the returned object.
         The hash key for caching is derived from sequences only: names are not considered.
-        """        
-        return self.to_pandas(use_names=False).apply(pd.value_counts, 0, normalize=True).fillna(0.0)
+        """
+        c=self._counts_per_column()
+        if not counts is None:
+            return c
+        else:
+            return c/self.n_seqs()
+
+    @lru_cache(maxsize=max_cache_size)
+    def _counts_per_column(self):
+        # for some reason floats are returned, though it's only counts. Couldn't remedy it
+        return self.to_pandas(use_names=False).apply(pd.value_counts, 0, normalize=False).fillna(0)
                 
     def trim_gaps(self, pct=1.0, inplace=False):
         """Removes the alignment columns with more gaps than specified
@@ -1079,15 +1091,15 @@ class Alignment:
         """
         ### get positions, a bit of benchmark
         #  [all([s[pos]=='-'  for n,s in a])   for pos in range(a.ali_length())]   # 65.3 ms
-        #  a.conservation_by_column(save=False).loc['-']==1.0                      # 2.6 s
-        #  a.conservation_by_column(save=True).loc['-']==1.0                       # 276 µs        
+        #  a.conservation_map(save=False).loc['-']==1.0                      # 2.6 s
+        #  a.conservation_map(save=True).loc['-']==1.0                       # 276 µs        
         #  np.apply_along_axis( lambda x: np.char.equal(x, '-').all(), 0,   a.to_numpy() )                 # 74.9 ms
         #  np.apply_along_axis( lambda x: np.char.equal(x, '-').all(), 0,   a.to_numpy(save=True) )        # 30.9 ms
         #  np.vectorize(lambda x:x=='-')(  a.to_numpy(save=False)).all(axis=0)     # 87.7 ms
         #  np.vectorize(lambda x:x=='-')(  a.to_numpy(save=True)).all(axis=0)      # 40.5 ms
 
-        # if not self._cbc is None:   #### If self.conservation_by_column was alread run? couldn't built this check procedure
-        #     cbc=self.conservation_by_column()
+        # if not self._cbc is None:   #### If self.conservation_map was alread run? couldn't built this check procedure
+        #     cbc=self.conservation_map()
         #     empty_cols_selector=( cbc.loc['-']==1.0 if '-' in cbc.index
         #                           else pd.Series(False, index=cbc.columns) )
         # else:
@@ -1136,7 +1148,7 @@ class Alignment:
         -TGGG- seq6
         <BLANKLINE>
 
-        >>> ali.conservation_by_column()
+        >>> ali.conservation_map()
                   0         1    2         3         4         5
         -  0.500000  0.000000  0.0  0.000000  0.000000  0.666667
         A  0.333333  0.000000  0.0  0.000000  0.000000  0.000000
@@ -1151,9 +1163,9 @@ class Alignment:
         'ATGCG-'
         """
         if ignore_gaps is None:
-            return ''.join(self.conservation_by_column().apply(pd.Series.idxmax))
+            return ''.join(self.conservation_map().apply(pd.Series.idxmax))
         else:
-            cmap=self.conservation_by_column().copy()
+            cmap=self.conservation_map().copy()
             cmap.loc['-'] [ cmap.loc['-']<ignore_gaps ] = np.nan
             return ''.join(cmap.apply(pd.Series.idxmax))
 
@@ -1354,8 +1366,10 @@ class Alignment:
                 return i
         raise IndexError(f'position_in_ali ERROR pos_in_seq requested ({pos_in_seq}) was greater than sequence length ({self.get_seq(name)})')
     
-    def score_similarity(self, targets=None, gaps='y'): # add gaps?
+    def score_similarity(self, targets=None, gaps='n', method=1): 
+        """ 
 
+        """
         if not self.same_length():
             raise AlignmentError('score_similarity ERROR sequences are not aligned!')
         
@@ -1366,129 +1380,122 @@ class Alignment:
                 raise AlignmentError(f'score_similarity ERROR "targets" argument must receive an Alignment, instead got {targets.__class__}')
             if not targets.same_length():
                 raise AlignmentError('score_similarity ERROR "targets" argument does not have same alignment length as self')
+
+        # compute weights: max conservation at this position (e.g. if A is most common letter, how common it is), except gaps
+        cmap=self.conservation_map()        
+        weights=cmap[cmap.index!='-'].max().rename('weight').rename_axis('position', axis=0)
+        
+        if method==1:
+            return pd.DataFrame(
+                [[statistics.mean([sequence_identity(ts, s, gaps=gaps)    for n, s in self]),
+                  statistics.mean([weighted_sequence_identity(ts, s, weights, gaps=gaps)    for n, s in self])]                 
+                 for tn, ts in targets  ], index=targets.names(), columns=['ASI', 'AWSI'])
+
+        if method==2:            
+            nps=self.to_numpy()
+            npt=targets.to_numpy()
+            wei=np.array(weights, dtype=np.float64)
             
-        cmap=self.conservation_by_column()
-        mc=pd.DataFrame( cmap.unstack() ).set_axis(['conservation'], axis=1).rename_axis( ['position', 'letter'] )
+            eq_matrix=np.char.equal( nps, npt[:,np.newaxis] )
+            
+            if gaps=='a':
+                selector=np.full(eq_matrix.shape, True, dtype=bool)
+            elif gaps=='n':
+                ## which positions are taken into account:  those in which neither target and selfseq is gap
+                selector=(npt!='-')[:, np.newaxis, :]  & (nps!='-')[np.newaxis, :, :]
+            elif gaps=='y':
+                selector=(npt!='-')[:, np.newaxis, :]  | (nps!='-')[np.newaxis, :, :]
+            elif gaps=='t':
+                selector=(  ~(targets.terminal_gap_mask())[:, np.newaxis, :] &
+                            ~(self.terminal_gap_mask())   [np.newaxis, :, :] &
+                            ((npt!='-')[:, np.newaxis, :]  | (nps!='-')[np.newaxis, :, :] ) )
+                        
+            ## matrix of length of alignments, i.e. the positions actually used for each comparison
+            ali_lengths=selector.sum(axis=2)
 
-        # removing lines corresponding to gaps: we don't want to score them positively. Later in merging they'll be 0
-        mc=mc[  ~mc.index.isin(['-'], level='letter') ]
-        """                 conservation
-        position letter
-        0        A                0.6
-                 C                0.0
-                 D                0.1
-                 E                0.0
-        ...                      ...
-        """
+            # matrix of sequence identities
+            si_matrix=(eq_matrix & selector).sum(axis=2)  /  ali_lengths
 
-        mts=( targets.to_pandas(use_names=True).unstack().rename('letter')
-          .rename_axis( ['position', 'name']).reset_index(1).set_index('letter', append=True) )
-        """              name
-        position letter
-        0        A       seq1
-                 -       seq2
-                 A       seq3
-        """
-        
-        
-        ## mask by gaps here
-        #######
-        jt=mts.join(mc, on=None, how='left').rename(columns={'conservation':'av_identity'})    ##join on index, add NAs if missing from mts
-        """              name  av_identity
-        position letter
-        0        -       seq2           NaN
-                 A       seq1      0.666667
-                 A       seq3      0.666667
-        1        -       seq2           NaN
-                 T       seq1      0.666667
-        """
-        # setting score of gaps (and also characters present in targets but not in self) from Na to 0
-        jt.fillna(value=0, inplace=True)
-        
-        # compute weights: max conservation at this position (e.g. if A is most common letter, how common it is)
-        we=mc.max(level='position').rename(columns={'conservation':'weight'})
-        """       weight
-        position
-        0         0.666667
-        1         0.666667
-        """
+            ############
+            # Average sequence identity: one row per target
+            asi=si_matrix.mean(axis=1)
 
-        ## adding weights per ali position 
-        jt=jt.join(we,   on='position',  how='left')
-        """              name    av_identity weight
-        position letter
-        0        -       seq2      0.000000  0.666667
-                 A       seq1      0.666667  0.666667
-                 A       seq3      0.666667  0.666667
-        1        -       seq2      0.000000  0.666667
-                 T       seq1      0.666667  0.666667
-        """
+            # sum of weighted identities
+            swi=( (eq_matrix & selector)  * wei[np.newaxis, np.newaxis, :] ).sum(axis=2)
 
-        jt['w_av_identity']=jt['av_identity']*jt['weight']
-        
-        
-        ### initing scores with:
-        # ASI: average sequence identity
-        scores=jt.drop('weight', axis=1).groupby('name').mean().rename(columns={'av_identity':'ASI',  'w_av_identity':'AWSI' })
-        return scores
-        
+            # tot weight per comparison
+            wpc=(wei[np.newaxis, np.newaxis, :]  * selector).sum(axis=2)
 
-        
-        
-        p=self.to_pandas().rename_axis('seqindex').rename_axis('position', axis=1)
-        """position 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29
-        seqindex
-        0         M  -  -  -  -  -  -  -  -  -  -  -  -  -  -  R  C  Y  V  E  -  -  -  -  -  Y  L  P  E  M
-        1         M  F  S  -  -  -  -  -  -  -  -  P  G  S  D  R  T  N  L  R  A  E  V  P  P  F  V  P  R  -
-        2         M  A  S  E  G  R  R  E  P  A  A  -  -  E  G  -  I  K  L  S  A  D  V  K  P  F  V  P  K  F
-        """
+            #### NOTE: we're normalizing by the total weights available in each comparison
+            #    may not be the way to go
+            swin=swi/wpc
 
-        pp=pd.DataFrame( p.unstack().rename('letter') ).reset_index(0)
-        """          position letter
-        seqindex
-        0                0      M
-        1                0      M
-        2                0      M
-        0                1      -
-        1                1      F
-       ...          ...   ...
-        1               28      R
-        2               28      K
-        0               29      M
-        1               29      -
-        2               29      F
-        [90 rows x 2 columns]"""
-        
-        q=pd.DataFrame( b.conservation_by_column().unstack() ).set_axis(['conservation'], axis=1).rename_axis( ['position', 'letter'] )
-        """                 conservation
-        position letter
-        0        -                0.0
-                 A                0.0
-                 C                0.0
-                 D                0.0
-                 E                0.0
-        ...                      ...
-        """
-        
-        res=pd.merge( pp, q, left_on=['position', 'letter'], right_index=True)
-        """          position letter  conservation
-        seqindex
-        0                0      M      1.000000
-        1                0      M      1.000000
-        2                0      M      1.000000
-        0                1      -      0.333333
-        1                1      F      0.333333
-       ...          ...  ...          ...
-        1               28      R      0.333333
-        2               28      K      0.333333
-        0               29      M      0.333333
-        1               29      -      0.333333
-        2               29      F      0.333333        
-        [90 rows x 3 columns] """
+            ############
+            # Average sequence identity: one row per target
+            awsi=swin.mean(axis=1)
 
-        ## average sequence identity per sequence
-        res.groupby(res.index).conservation.mean()
-        
+            return pd.DataFrame( np.column_stack( (asi, awsi) ),
+                                 index=targets.names(),
+                                 columns=['ASI', 'AWSI']  )
+ 
+        if method==3:
+            if gaps != 'a':
+                raise AlignmentError(f"score_similarity ERROR gaps {gaps} with method {method} is not implemented")
+            else: 
+                #cmap=self.conservation_map()
+                mc=pd.DataFrame( cmap.unstack() ).set_axis(['conservation'], axis=1).rename_axis( ['position', 'letter'] )
+
+                # removing lines corresponding to gaps: we don't want to score them positively. Later in merging they'll be 0
+                #if not gaps=='a':
+                #    mc=mc[  ~mc.index.isin(['-'], level='letter') ]
+                """                 conservation
+                position letter
+                0        A                0.6
+                         C                0.0
+                         D                0.1
+                         E                0.0
+                ...                      ...
+                """
+
+                mts=( targets.to_pandas(use_names=True).unstack().rename('letter')
+                      .rename_axis( ['position', 'name']).reset_index(1).set_index('letter', append=True) )
+                """              name
+                position letter
+                0        A       seq1
+                         -       seq2
+                         A       seq3
+                """
+
+                ## mask by gaps here ??
+                #######
+                jt=mts.join(mc, on=None, how='left').rename(columns={'conservation':'av_identity'})    ##join on index, add NAs if missing from mts
+                """              name  av_identity
+                position letter
+                0        -       seq2      0.333333
+                         A       seq1      0.666667
+                         A       seq3      0.666667
+                1        -       seq2      0.333333                """
+                # setting score of gaps (and also characters present in targets but not in self) from Na to 0
+                jt.fillna(value=0, inplace=True)
+
+                ## adding weights per ali position 
+                jt=jt.join(weights,   on='position',  how='left')
+                """              name    av_identity weight
+                position letter
+                0        -       seq2      0.333333  0.666667
+                         A       seq1      0.666667  0.666667
+                         A       seq3      0.666667  0.666667
+                1        -       seq2      0.333333  0.666667
+                         T       seq1      0.666667  0.666667                """
+
+                jt['w_av_identity']=jt['av_identity']*jt['weight']
+                scores=jt.drop('weight', axis=1).groupby('name').mean().rename(columns={'av_identity':'ASI',  'w_av_identity':'AWSI' })
+
+                return scores.loc[self.names()]  
+                
+        else:
+            raise AlignmentError(f'score_similarity ERROR method not recognized {method}')
+                
 
 if __name__ == "__main__":
     import doctest, sys

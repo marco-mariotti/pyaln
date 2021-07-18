@@ -1,2 +1,2 @@
 from .alignment import *
-import sequtils 
+from .sequtils import *

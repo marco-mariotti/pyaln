@@ -6,22 +6,21 @@
 Welcome to pyaln's documentation!
 =================================
 
+The module pyaln is centered around the Alignment class, which provides access to convenient
+methods for reading, processing, and writing alignments.
+
+- To start, check the :doc:`tutorial`!
+- Find the full documentation at :doc:`alignment`
+- Here's a :doc:`genindex` of all methods and objects.
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 	     
+   tutorial
    alignment
+   genindex
+       
 
-Alignment
-=========
-The core of pyaln is the Alignment class, which provides access to convenient methods for reading, processing, and writing alignments.
-
-
-     
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. * :ref:`search`
+.. * :ref:`modindex`

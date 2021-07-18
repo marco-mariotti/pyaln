@@ -1,11 +1,5 @@
-Source documentation
-====================
-
-
-.. automodule:: pyaln
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Alignment class
+===============
       
 .. autoclass:: pyaln.Alignment
    :members:

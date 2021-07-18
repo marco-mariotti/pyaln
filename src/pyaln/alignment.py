@@ -1,66 +1,49 @@
 import os, io
+from functools import lru_cache
+from typing import Union, TextIO
+import pandas as pd
+import numpy as np
 from Bio import SeqIO, AlignIO, Seq, SeqRecord, Align
+
 MultipleSeqAlignment=Align.MultipleSeqAlignment
 SeqRecord=SeqRecord.SeqRecord
 Seq=Seq.Seq
 
-# from Bio.Seq import Seq
-# from Bio.SeqRecord import SeqRecord
-# from Bio.Align import MultipleSeqAlignment
+__all__=['Alignment', 'pyaln_folder']
 
-import pandas as pd
-import numpy as np
-from functools import lru_cache
-from typing import Union, TextIO
-
-
-__all__=['Alignment']
+pyaln_folder = os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.abspath( __file__)   )))
 
 class AlignmentError(Exception):
-    """ """
+    """Exceptions raised by the Alignment class """
 
-# temp:    
-    """
-    - Finally special sections such as **See Also**, **Warnings**, **Notes**
-      use the sphinx syntax (*paragraph directives*)::
-
-          .. seealso:: blabla
-          .. warnings also:: blabla
-          .. note:: blabla
-          .. todo:: blabla
-
-    .. note::
-        There are many other Info fields but they may be redundant:
-            * param, parameter, arg, argument, key, keyword: Description of a
-              parameter.
-            * type: Type of a parameter.
-            * raises, raise, except, exception: That (and when) a specific
-              exception is raised.
-            * var, ivar, cvar: Description of a variable.
-            * returns, return: Description of the return value.
-            * rtype: Return type.
-"""
     
 class Alignment: 
     """Represents a multiple sequence alignment.
 
     Alignment can contain sequences of any type (nucleotide, protein, or custom).
-    Gaps **must** be encoded as "-".
+    Gaps **must** be encoded as `-`.
 
     Each entry is uniquely identified by a *name*, with an optional *description*.
-    Each sequence name is derived from the first word of title in sequence files; 
-    the remainder of title is taken as description.
+    When reading alignment files, sequence *titles* are split into the name (the first word)
+    and descriptions (the remainder of the title).
 
-    An Alignment can be instanced with a filename (or file buffer), or from any iterable of [title, sequence].
+    An Alignment can be instanced with a filename (or file buffer), or from any iterable of `[title, sequence]`.
     A variety of file formats are supported, through Bio.AlignIO (see `a full list  <https://biopython.org/wiki/AlignIO>`_).    
     When a filename or buffer is provided but not the file format, Alignment tries to guess it from the extension.
 
-    You can take easily portions of an Alignment (i.e. take some sequences and/or some columns) by indexing it.
-    The format is Alignment[ *rows_selector*, *column_selector*], where each selector can be a slice. 
-    The *rows_selector* can index by integer (position of sequence name in the alignment), or it can be a list of names instead.
-    The *column_selector* is a integer index or slice. See examples below. 
+    You can take portions of an Alignment (i.e. take some sequences and/or some columns) by **indexing** it.
 
-    Iterating over an Alignment will yield tuples like (name, sequence). To get descriptions, use get_desc(name).
+    The format is `Alignment[rows_selector, column_selector]`, where: 
+
+        - The `rows_selector` can be an integer (i.e., the vertical position of 
+          the sequence in the alignment), or a slice thereof (e.g. `2:5`), or a list of sequence names.
+        - The `column_selector` is a integer index (i.e. the horizontal position in the alignment),
+          or a slice thereof, or a Numpy boolean array. See examples below. 
+
+
+    Iterating over an Alignment will yield tuples like `(name, sequence)`. 
+    To get the description of a sequence, use `Alignment.get_desc(name)`.
 
     Parameters
     ----------
@@ -73,9 +56,9 @@ class Alignment:
     Examples
     --------
 
-    >>> ali=Alignment('examples/example_ali.fa')
+    >>> ali=Alignment(pyaln_folder+'/examples/fep15_protein.fa')
 
-    Default representation does not contain descriptions (use Alignment.fasta() for that):
+    Default representation (note, it does not contain descriptions): 
 
     >>> ali
     # Alignment of 6 sequences and 138 positions
@@ -87,7 +70,9 @@ class Alignment:
     MWAFVLIAFSVGA---SDS------SNSTAEVIARGKLMAPSVVGUAIKKLPELNRFLM...L Fep15_O_latipes
     <BLANKLINE>
 
-    >>> ali=Alignment('examples/example_ali.stockholm', fileformat='stockholm')
+    Many file formats are supported:
+
+    >>> ali=Alignment(pyaln_folder+'/examples/fep15_protein.stockholm', fileformat='stockholm')
     >>> ali
     # Alignment of 6 sequences and 138 positions
     MWLTLVALLALCATGRTAENLSESTTDQDKLVIARGKLVAPSVVGUSIKKMPELYNFLM...L Fep15_danio_rerio
@@ -108,8 +93,19 @@ class Alignment:
     ATTCG- seq3
     <BLANKLINE>
 
-    Indexing an alignment
-    =====================
+    To visualize sequence descriptions, use the fasta format:
+
+    >>> ali=Alignment([ ('seq1 this is a seq', 'ATTCG-'), ('seq2 another seq', '--TTGG'), ('seq3', 'ATTCG-')])    
+    >>> print(ali.fasta())
+    >seq1 this is a seq
+    ATTCG-
+    >seq2 another seq
+    --TTGG
+    >seq3
+    ATTCG-
+    <BLANKLINE>
+
+    **Indexing an alignment**
 
     Get alignment of first two sequences only:
 
@@ -340,9 +336,9 @@ class Alignment:
 
         Warning
         -------
-        For best performance speed, the Alignment class does not check that all sequences have the same length.
+        For best performance, the Alignment class does not check that all sequences have the same length.
         This method simply returns the length of the first sequence.
-        To check for homogenous sequence length, see same_length()
+        To check for homogenous sequence length, see :func:`same_length`
 
         See Also
         --------
@@ -680,7 +676,7 @@ class Alignment:
                 out+=seq[i:i + nchar]+'\n'
         return out
 
-    def write(self, fileformat='fasta'):
+    def write(self, fileformat='fasta', to_file=None):
         """Returns a string representation of the alignment in a format of choice
 
         Internally uses Bio.Align to generate output. 
@@ -692,6 +688,8 @@ class Alignment:
         ----------
         fileformat : str, default='fasta'
             text format requested
+        to_file : str | TextIO, optional
+            filename or buffer to write into. If not specified, the output is returned instead
 
         Returns
         -------
@@ -709,37 +707,15 @@ class Alignment:
         <BLANKLINE>
         
         """
-        if fileformat=='fasta':
-            return self.fasta()
-        else:
-            return format(self.to_biopython(), fileformat)
-
-    def write_to_file(self, file_or_buff, fileformat='fasta'):
-        """Write the alignment to a file
-
-        Convenience function internally calling write() and directing it to a file
-
-        Parameters
-        ----------
-
-        file_or_buff : str | TextIO
-            Filename (or buffer) to write the alignment to
-
-        fileformat : str, default='fasta'
-            fileformat requested, see write() for supported formats
-
-        Returns
-        -------
-        None
-            None
-
-        See also
-        --------
-        write: returns a representation of the alignment in the requested format
-        """
-        with (file_or_buff if not isinstance(file_or_buff, str)
-              else open(file_or_buff, 'w')) as fh:
-            fh.write( self.write(fileformat=fileformat) )    
+        if not to_file is None:
+            with (to_file if not isinstance(to_file, str)
+                  else open(to_file, 'w')) as fh:
+                fh.write( self.write(fileformat=fileformat) )    
+        else:        
+            if fileformat=='fasta':
+                return self.fasta()
+            else:
+                return format(self.to_biopython(), fileformat)
 
     def __add__(self, other):  return self.concatenate(other)
     def concatenate(self, other):
@@ -906,7 +882,7 @@ class Alignment:
 
         Parameters
         ----------
-        *inplace : bool, default:True
+        inplace : bool, default:True
             whether the removal should be done in place. If not, a new Alignment is returned instead
 
         Returns
@@ -972,16 +948,16 @@ class Alignment:
         -------
         np.ndarray
             The returned array has one row per sequence and one column per alignment position.
-            Each value is a single character. The dtype is np.str_
+            Each value is a single character. The dtype is np.str\_
             Note that rows are not indexed by sequence names, just by their order index
 
         Examples
         --------
         >>> ali= Alignment([ ('seq1 first', 'ATTCG-'), ('seq2 this is 2nd'  , '--TTGG'), ('seq3', '--TT--')])
-        >>> ali.to_numpy()
-        array([['A', 'T', 'T', 'C', 'G', '-'],
-               ['-', '-', 'T', 'T', 'G', 'G'],
-               ['-', '-', 'T', 'T', '-', '-']], dtype='<U1')
+        >>> print(ali.to_numpy())
+        [['A' 'T' 'T' 'C' 'G' '-']
+         ['-' '-' 'T' 'T' 'G' 'G']
+         ['-' '-' 'T' 'T' '-' '-']]
 
         See Also
         --------
@@ -1042,7 +1018,6 @@ class Alignment:
         for all characters which are observed at least once in the alignment.
         This may not correspond to the full nucleotide or protein alphabet, if some characters are not present in the alignment.
 
-
         Returns
         -------
         pd.DataFrame
@@ -1069,7 +1044,40 @@ class Alignment:
         return self.to_pandas(use_names=False).apply(pd.value_counts, 0, normalize=True).fillna(0.0)
                 
     def trim_gaps(self, pct=1.0, inplace=False):
-        ### get positions:
+        """Removes the alignment columns with more gaps than specified
+
+        By default, a new alignment without the columns identified as 'too gappy' is returned.        
+        
+        Parameters
+        ----------
+        pct     : float, default:1.0
+            minimal gap frequency (from 0.0 to 1.0) for a column to be removed
+        inplace : bool, default:False
+            whether the column removal should be done in place. If not, a new Alignment is returned instead
+
+        Returns
+        -------
+        None or Alignment
+            By default, a new Alignment without empty sequences is returned; if inplace==True, None is returned
+
+        Examples
+        --------
+        >>> ali= Alignment([ ('seq1 first', 'ATTCG-'), ('seq2 this is 2nd'  , '--TTG-'), ('seq3', 'ATTCCG')])
+        >>> ali
+        # Alignment of 3 sequences and 6 positions
+        ATTCG- seq1
+        --TTG- seq2
+        ATTCCG seq3
+        <BLANKLINE>        
+
+        >>> ali.trim_gaps(0.5)
+        # Alignment of 3 sequences and 5 positions
+        ATTCG seq1
+        --TTG seq2
+        ATTCC seq3
+        <BLANKLINE>        
+        """
+        ### get positions, a bit of benchmark
         #  [all([s[pos]=='-'  for n,s in a])   for pos in range(a.ali_length())]   # 65.3 ms
         #  a.conservation_by_column(save=False).loc['-']==1.0                      # 2.6 s
         #  a.conservation_by_column(save=True).loc['-']==1.0                       # 276 µs        
@@ -1078,7 +1086,7 @@ class Alignment:
         #  np.vectorize(lambda x:x=='-')(  a.to_numpy(save=False)).all(axis=0)     # 87.7 ms
         #  np.vectorize(lambda x:x=='-')(  a.to_numpy(save=True)).all(axis=0)      # 40.5 ms
 
-        # if not self._cbc is None:   #### If self.conservation_by_column was alread run? couldn't built this check
+        # if not self._cbc is None:   #### If self.conservation_by_column was alread run? couldn't built this check procedure
         #     cbc=self.conservation_by_column()
         #     empty_cols_selector=( cbc.loc['-']==1.0 if '-' in cbc.index
         #                           else pd.Series(False, index=cbc.columns) )
@@ -1097,43 +1105,336 @@ class Alignment:
             for i, (name, _) in enumerate(self):
                 a.add_seq(name, seqs[i], desc=self.get_desc(name))
             return a    
+        
+    def consensus(self, ignore_gaps=None ): # to do: what to do with gaps?
+        """Compute the consensus sequence, taking the most represented character for each column
 
-    def consensus(self): # to do: what to do with gaps?
-        return ''.join(self.conservation_by_column().apply(pd.Series.idxmax))
+        Parameters
+        ----------
+        ignore_gaps : float, optional
+            By default, gaps are treated as any other character, so that they are returned for columns
+            in which they are the most common character.
+            If you provide ignore_gaps with a float from 0.0 to 1.0, gaps are not present on the output
+            except for columns with a frequency equal or greater than the value provided. 
+            For example, a value of 1.0 implies gaps are included only if a column is entirely made of gaps
+
+        Returns
+        -------
+        str
+            The consensus sequence 
+
+        Examples
+        --------
+        >>> ali= Alignment([ ('seq1', 'ATTCG-'), ('seq2'  , '-TTCGT'), ('seq3', 'ACGCG-'),  ('seq4', 'CTTGGT'), ('seq5', '-TGCT-'), ('seq6', '-TGGG-')])
+        >>> ali
+        # Alignment of 6 sequences and 6 positions
+        ATTCG- seq1
+        -TTCGT seq2
+        ACGCG- seq3
+        CTTGGT seq4
+        -TGCT- seq5
+        -TGGG- seq6
+        <BLANKLINE>
+
+        >>> ali.conservation_by_column()
+                  0         1    2         3         4         5
+        -  0.500000  0.000000  0.0  0.000000  0.000000  0.666667
+        A  0.333333  0.000000  0.0  0.000000  0.000000  0.000000
+        C  0.166667  0.166667  0.0  0.666667  0.000000  0.000000
+        G  0.000000  0.000000  0.5  0.333333  0.833333  0.000000
+        T  0.000000  0.833333  0.5  0.000000  0.166667  0.333333
+
+        >>> ali.consensus()
+        '-TGCG-'
+
+        >>> ali.consensus(0.6)
+        'ATGCG-'
+        """
+        if ignore_gaps is None:
+            return ''.join(self.conservation_by_column().apply(pd.Series.idxmax))
+        else:
+            cmap=self.conservation_by_column().copy()
+            cmap.loc['-'] [ cmap.loc['-']<ignore_gaps ] = np.nan
+            return ''.join(cmap.apply(pd.Series.idxmax))
 
     def gap_mask(self):
+        """Returns a boolean numpy array marking gaps
+        
+        Returns
+        -------
+        np.ndarray
+            The returned array has one row per sequence and one column per alignment position.           
+            Each value is a boolean indicating presence of a gap
+            Note that rows are indexed by integers, not by sequence names
+
+        Examples
+        --------
+        >>> ali= Alignment([ ('seq1', 'ATTCG-'), ('seq2'  , '--TTG-'), ('seq3', 'AT--CG')])
+        >>> ali.gap_mask()
+        array([[False, False, False, False, False,  True],
+               [ True,  True, False, False, False,  True],
+               [False, False,  True,  True, False, False]])
+
+        See also
+        --------
+        terminal_gap_mask
+        """
         return self.to_numpy()=='-'
 
     def terminal_gap_mask(self):
+        """Returns a boolean numpy array marking terminal gaps
+        
+        Terminal gaps are those that have only gaps to their left or to their right
+
+        Returns
+        -------
+        np.ndarray
+            The returned array has one row per sequence and one column per alignment position.           
+            Each value is a boolean indicating presence of a terminal gap
+            Note that rows are indexed by integers, not by sequence names
+
+        Examples
+        --------
+        >>> ali= Alignment([ ('seq1', 'ATTCG-'), ('seq2'  , '--TTG-'), ('seq3', 'AT--CG')])
+        >>> ali.terminal_gap_mask()
+        array([[False, False, False, False, False,  True],
+               [ True,  True, False, False, False,  True],
+               [False, False, False, False, False, False]])
+
+        See also
+        --------
+        gap_mask
+        """        
         return np.apply_along_axis(
             # below: each bool array is as long as sequence;  function is applied to each row
                       #  bool array: is left term gap? # or # bool array: is right term gap?            
             lambda x: ( np.logical_and.accumulate(x)  |  np.logical_and.accumulate( x[::-1] )[::-1] ),
             1,  self.gap_mask())
-        #tested: per row is faster than whole matrix
+        #tested: computing per row is faster than whole matrix
 
     def position_map(self):
-        """ Same size and type as self.to_numpy; indexing rows with names
-        Each value is the position of the seq in that pos of the alignment. 
-        If a gap, it's the position of the closes position of the seq to the left
-        If it's a left terminal gap, the value is -1
+        """Compute a numerical matrix instrumental to map alignment positions to sequence positions (and reverse)
+        
+        Returns
+        -------
+        pd.DataFrame
+            Returns a Pandas DataFrame with one row per sequence (indexed by name), and one column 
+            per alignment position. Each value is the index of that particular sequence (without gaps) 
+            in that alignment column. All positions are 0-based.
+            For gap positions, the position of the closest non-gap to the left is reported.
+            For left terminal gaps, the value reported is -1
+
+        Examples
+        --------
+        >>> ali= Alignment([ ('seq1', 'ATTCG-'), ('seq2'  , '--TTG-'), ('seq3', 'ATTCCG')])
+        >>> ali
+        # Alignment of 3 sequences and 6 positions
+        ATTCG- seq1
+        --TTG- seq2
+        ATTCCG seq3
+        <BLANKLINE>
+        
+        >>> ali.position_map()
+              0  1  2  3  4  5
+        seq1  0  1  2  3  4  4
+        seq2 -1 -1  0  1  2  2
+        seq3  0  1  2  3  4  5
+
+        Note
+        ----
+        Computing this matrix makes sense only if you will use positions for many or all sequences.
+        For the corresponding operations on single sequences, see functions :func:`position_in_seq` 
+        and :func:`position_in_ali`
+        
+        See also
+        --------
+        position_in_seq: maps an alignment position to sequence position for a single sequence
+        position_in_ali: maps a sequence position to alignment position for a single sequence
         """
         m= np.add.accumulate( (self.to_numpy()!='-'), 1) -1
-        return pd.DataFrame( m, index=self.names() ) .loc[name, pos]
+        return pd.DataFrame( m, index=self.names() ) 
     
     def position_in_seq(self, name, pos_in_ali):
-        s=self.get_seq(name)[:pos_in_ali+1].rstrip('-')
+        """Maps an alignment column position to the corresponding position in a certain sequence
+        
+        Parameters
+        ----------
+        name : str
+            the name of the sequence to map to
+        pos_in_ali : int
+            0-based alignment position, i.e. the column index
+
+        Returns
+        -------
+        int 
+            0-based position in sequence, i.e. the index of the sequence without counting gaps 
+            at the requested column.
+
+            **Note** that for gap positions, the position of the closest non-gap to the left is reported.
+            For gap positions, the position of the closest non-gap to the left is reported.
+
+        Examples
+        --------
+        >>> ali= Alignment([ ('seq1', 'ATTCG-'), ('seq2'  , '--TTG-'), ('seq3', 'ATTCCG')])
+        >>> ali
+        # Alignment of 3 sequences and 6 positions
+        ATTCG- seq1
+        --TTG- seq2
+        ATTCCG seq3
+        <BLANKLINE>
+        
+        >>> ali.position_in_seq('seq1', 4)
+        4
+        >>> ali.position_in_seq('seq2', 2)
+        0
+
+        Checking a left terminal gap returns -1:
+
+        >>> ali.position_in_seq('seq2', 0)
+        -1
+
+        Checking a gap position returns the index of the closest non gap char on the left:
+
+        >>> ali.position_in_seq('seq1', 5)
+        4
+        
+        See also
+        --------
+        position_in_ali: maps a sequence position to alignment position for a single sequence
+        position_map: maps all alignment positions for all sequences
+        """    
+        s=self.get_seq(name)[:pos_in_ali+1] 
         return pos_in_ali-s.count('-') if s else -1
     
     def position_in_ali(self, name, pos_in_seq):
+        """Maps an position in a certain sequence (without counting gaps) to its corresponding position in the alignment
+
+        If the requested position is invalid, raise an IndexError
+        
+        Parameters
+        ----------
+        name : str
+            the name of the sequence
+        pos_in_seq : int
+            0-based sequence position, i.e. the index mapping to the requested sequence without gaps
+
+        Returns
+        -------
+        int 
+            0-based alignment position , i.e. the column index where the requested sequence position is found
+
+        Examples
+        --------
+        >>> ali= Alignment([ ('seq1', 'ATTCG-'), ('seq2'  , '--TTG-'), ('seq3', 'AT-CCG')])
+        >>> ali
+        # Alignment of 3 sequences and 6 positions
+        ATTCG- seq1
+        --TTG- seq2
+        AT-CCG seq3
+        <BLANKLINE>
+        
+        >>> ali.position_in_ali('seq1', 4)
+        4
+        >>> ali.position_in_ali('seq2', 0)
+        2
+        >>> ali.position_in_ali('seq3', 2)
+        3
+        
+        See also
+        --------
+        position_in_seq: maps an alignment position to sequence position for a single sequence
+        position_map: maps all alignment positions for all sequences
+        """
+        if pos_in_seq<0:
+            raise IndexError(f'position_in_ali ERROR pos_in_seq requested is negative: {pos_in_seq}')
         p=-1
         for i, c in enumerate( self.get_seq(name) ):
             if c!='-': p+=1
             if  p==pos_in_seq:
                 return i
+        raise IndexError(f'position_in_ali ERROR pos_in_seq requested ({pos_in_seq}) was greater than sequence length ({self.get_seq(name)})')
     
-    def _temp_cons(self):
+    def score_similarity(self, targets=None, gaps='y'): # add gaps?
 
+        if not self.same_length():
+            raise AlignmentError('score_similarity ERROR sequences are not aligned!')
+        
+        if targets is None:
+            targets=self
+        else:
+            if not isinstance(targets, Alignment):
+                raise AlignmentError(f'score_similarity ERROR "targets" argument must receive an Alignment, instead got {targets.__class__}')
+            if not targets.same_length():
+                raise AlignmentError('score_similarity ERROR "targets" argument does not have same alignment length as self')
+            
+        cmap=self.conservation_by_column()
+        mc=pd.DataFrame( cmap.unstack() ).set_axis(['conservation'], axis=1).rename_axis( ['position', 'letter'] )
+
+        # removing lines corresponding to gaps: we don't want to score them positively. Later in merging they'll be 0
+        mc=mc[  ~mc.index.isin(['-'], level='letter') ]
+        """                 conservation
+        position letter
+        0        A                0.6
+                 C                0.0
+                 D                0.1
+                 E                0.0
+        ...                      ...
+        """
+
+        mts=( targets.to_pandas(use_names=True).unstack().rename('letter')
+          .rename_axis( ['position', 'name']).reset_index(1).set_index('letter', append=True) )
+        """              name
+        position letter
+        0        A       seq1
+                 -       seq2
+                 A       seq3
+        """
+        
+        
+        ## mask by gaps here
+        #######
+        jt=mts.join(mc, on=None, how='left').rename(columns={'conservation':'av_identity'})    ##join on index, add NAs if missing from mts
+        """              name  av_identity
+        position letter
+        0        -       seq2           NaN
+                 A       seq1      0.666667
+                 A       seq3      0.666667
+        1        -       seq2           NaN
+                 T       seq1      0.666667
+        """
+        # setting score of gaps (and also characters present in targets but not in self) from Na to 0
+        jt.fillna(value=0, inplace=True)
+        
+        # compute weights: max conservation at this position (e.g. if A is most common letter, how common it is)
+        we=mc.max(level='position').rename(columns={'conservation':'weight'})
+        """       weight
+        position
+        0         0.666667
+        1         0.666667
+        """
+
+        ## adding weights per ali position 
+        jt=jt.join(we,   on='position',  how='left')
+        """              name    av_identity weight
+        position letter
+        0        -       seq2      0.000000  0.666667
+                 A       seq1      0.666667  0.666667
+                 A       seq3      0.666667  0.666667
+        1        -       seq2      0.000000  0.666667
+                 T       seq1      0.666667  0.666667
+        """
+
+        jt['w_av_identity']=jt['av_identity']*jt['weight']
+        
+        
+        ### initing scores with:
+        # ASI: average sequence identity
+        scores=jt.drop('weight', axis=1).groupby('name').mean().rename(columns={'av_identity':'ASI',  'w_av_identity':'AWSI' })
+        return scores
+        
+
+        
+        
         p=self.to_pandas().rename_axis('seqindex').rename_axis('position', axis=1)
         """position 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29
         seqindex
@@ -1162,17 +1463,12 @@ class Alignment:
         """                 conservation
         position letter
         0        -                0.0
-        A                0.0
-        C                0.0
-        D                0.0
-        E                0.0
-       ...                      ...
-        29       R                0.0
-        S                0.0
-        T                0.0
-        V                0.0
-        Y                0.0        
-        [540 rows x 1 columns] """
+                 A                0.0
+                 C                0.0
+                 D                0.0
+                 E                0.0
+        ...                      ...
+        """
         
         res=pd.merge( pp, q, left_on=['position', 'letter'], right_index=True)
         """          position letter  conservation

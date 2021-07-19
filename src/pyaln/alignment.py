@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import statistics
 from Bio import SeqIO, AlignIO, Seq, SeqRecord, Align
-from .sequtils import *
+from . import sequtils
 
 
 MultipleSeqAlignment=Align.MultipleSeqAlignment
@@ -943,7 +943,7 @@ class Alignment:
                         description=self.get_desc(name) )
              for name, seq in self])
 
-    @lru_cache(maxsize=max_cache_size)
+    #@lru_cache(maxsize=max_cache_size)
     def to_numpy(self):
         """Returns a numpy 2-D array representation of the alignment, useful for vectorized sequence methods
         
@@ -1050,7 +1050,7 @@ class Alignment:
         else:
             return c/self.n_seqs()
 
-    @lru_cache(maxsize=max_cache_size)
+    #@lru_cache(maxsize=max_cache_size)
     def _counts_per_column(self):
         # for some reason floats are returned, though it's only counts. Couldn't remedy it
         return self.to_pandas(use_names=False).apply(pd.value_counts, 0, normalize=False).fillna(0)
@@ -1365,10 +1365,161 @@ class Alignment:
             if  p==pos_in_seq:
                 return i
         raise IndexError(f'position_in_ali ERROR pos_in_seq requested ({pos_in_seq}) was greater than sequence length ({self.get_seq(name)})')
-    
-    def score_similarity(self, targets=None, gaps='n', method=1): 
-        """ 
 
+
+
+    def conservation_weights(self, method='m'):
+        """ """
+        if not method in {'m', 'i', 'q'}:
+            raise AlignmentError("conservation_weights ERROR argument is not among accepted values {m, i, q}")
+        cmap=self.conservation_map()
+        z=cmap[cmap.index!='-'].to_numpy()
+        if z.size==0:
+            return np.array([], dtype='float64')
+        if   method=='m':
+            return z.max(axis=0)
+        elif method=='i':
+            log2_arr=np.log2(z, out=np.zeros(z.shape), where= z!=0 )
+            return (z * log2_arr).sum(axis=0)
+        elif method=='q':
+            return (z * np.square(z)).sum(axis=0)
+        
+                                 
+        
+        
+        
+    
+    def score_similarity(self, targets=None, gaps='y', metrics='i', weights='m',
+                         method=2):  # to be removed soon
+        """Computes metrics of similarity between some target sequences and sequences in the (self) alignment 
+
+        The rationale of the function is to quantify how much target sequences 'fit' in the alignment.
+        By default, similarity metrics are computed for all sequences in self, meaning targets=self.
+        In that case, they provide a measure of how much sequences resemble each other, i.e. the global
+        agreement of alignment, and it can be instrumental to identify outliers.
+
+        The default use of this function is to compute the Average Sequence Identity (*ASI*) of targets,
+        obtained by performing pairwise comparisons between each target and all sequences in self, and averaging.
+        The definition of sequence identity varies as gaps may be counted in different ways, as specified by 
+        the gaps argument.
+
+        Besides *ASI*, a variant called *AWSI* (Average Weighted Sequence Identity) is available, wherein 
+        different alignment columns are given different *weight* when averaging. Various built-in methods 
+        to define weights are available, all based on the concept that conserved alignment positions
+        are given more weight. Custom weights may also be provided.
+        
+        Parameters
+        ----------
+
+        targets : Alignment, optional
+            sequences for which the similarity metrics are requested, provided as an Alignment instance.
+            The sequences must be aligned to the self Alignment. If not provided, self is taken as targets, 
+            meaning that metrics are reported for each sequence in self, compared to the full alignment.
+
+        gaps : str, default:'y'
+            defines how to take into account gaps when comparing sequences pairwise. Possible values:
+            - 'a' : gaps are considered as any other character; even gap-to-gap matches are scored as identities.
+            - 'y' : gaps are considered and considered mismatches. Positions that are gaps in both sequences are ignored.
+            - 'n' : gaps are not considered. Positions that are gaps in either sequences compared are ignored.
+            - 't' : terminal gaps are trimmed. Positions that are terminal gaps in either sequences are ignored, 
+                    others are considered as in 'y'.
+     
+            Multiple arguments may be concatenated (e.g. 'yn') to compute all of the possibilities.
+
+        metrics : str, default:'i'
+            defines which metrics are computed. Possible values:
+            - 'i' : average sequence identity, aka ASI
+            - 'w' : weighted sequence identity, aka AWSI
+            
+            Multiple arguments may be concatenated (e.g. 'iw') to compute all of the possibilities.
+
+        weights : str or list or np.ndarray, default: 'm'
+            if AWSI is computed, defines how weights are computed for each alignment column. Possible values:
+            - 'm' : maximum frequency of non-gap character in self
+            - 'i' : information content, i.e. 2- sum(p*log2(p)) where p is frequency of non-gap characters
+            - 'q' : quadratic sum, i.e. sum(p*p) where p is frequency of non-gap characters
+
+            Multiple arguments may be concatenated (e.g. 'mi') to compute all of the possibilities.
+            
+            Alternatively, custom weights may be provided as an iterable (e.g. list or Numpy ndarray) 
+            of numbers (the weights), with as many elements as the alignment columns.
+
+        Returns
+        ------- 
+        pd.DataFrame
+            a DataFrame with one row per target (indexed by sequence names), and one column for each sequence metrics
+            requested. If multiple parameters were specified for *gaps*, *metrics* and/or *weights*, the output columns
+            are a MultiIndex which covers all combinations requested.
+
+        See also
+        --------
+        sequtils.sequence_identity : function that compares sequences pairwise and returns their sequence identity. 
+                                     Accepts the same gaps argument as score_similarity. Though sequtils.sequence_identity 
+                                     is not run internally by score_similarity, it can be used to replicate its results.
+
+        
+        Examples
+        --------
+        >>> ali= Alignment([ ('seq1', 'ATTCG-'), ('seq2'  , '--TTG-'), ('seq3', 'AT-CCG')])
+        >>> ali
+        # Alignment of 3 sequences and 6 positions
+        ATTCG- seq1
+        --TTG- seq2
+        AT-CCG seq3
+        <BLANKLINE>
+
+        >>> fep_ali=Alignment(pyaln_folder + '/examples/fep15_protein.fa', fileformat='fasta')
+        >>> fep_ali
+        # Alignment of 6 sequences and 138 positions
+        MWLTLVALLALCATGRTAENLSESTTDQDKLVIARGKLVAPSVVGUSIKKMPELYNFLM...L Fep15_danio_rerio
+        MWAFLLLTLAFSATGMTEED-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPALYMFLM...L Fep15_S_salar
+        MWIFLLLTLAFSATGMTEEN-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPELYTFLM...L Fep15_O_mykiss
+        MWAFLVLTFAVAA-GASETV-DNHTAAEEKLLIARGKLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_rubripess
+        MWALLVLTFAVTV-GASEEV-KNQTAAEEKLVIARGTLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_nigroviridis
+        MWAFVLIAFSVGA---SDS------SNSTAEVIARGKLMAPSVVGUAIKKLPELNRFLM...L Fep15_O_latipes
+        
+        >>> fep_ali.score_similarity()
+        metrics                    ASI
+        Fep15_danio_rerio     0.775362
+        Fep15_S_salar         0.823901
+        Fep15_O_mykiss        0.821459
+        Fep15_T_rubripess     0.824697
+        Fep15_T_nigroviridis  0.808872
+        Fep15_O_latipes       0.747919
+
+        If we choose to not consider gap positions, the score increases:
+
+        >>> fep_ali.score_similarity(gaps='n')
+        metrics                    ASI
+        Fep15_danio_rerio     0.790391
+        Fep15_S_salar         0.835699
+        Fep15_O_mykiss        0.833154
+        Fep15_T_rubripess     0.837398
+        Fep15_T_nigroviridis  0.828789
+        Fep15_O_latipes       0.784919
+        
+        Requesting AWSI as well as ASI, and testing both considering and omitting gaps:
+
+        >>> fep_ali.score_similarity(gaps='yn', metrics='iw')
+        gaps                         y                   n
+        metrics                    ASI      AWSI       ASI      AWSI
+        Fep15_danio_rerio     0.775362  0.847681  0.790391  0.847681
+        Fep15_S_salar         0.823901  0.882831  0.835699  0.882831
+        Fep15_O_mykiss        0.821459  0.880440  0.833154  0.880440
+        Fep15_T_rubripess     0.824697  0.881636  0.837398  0.881636
+        Fep15_T_nigroviridis  0.808872  0.864419  0.828789  0.864419
+        Fep15_O_latipes       0.747919  0.812769  0.784919  0.812769
+
+        Computing AWSI with all possible weights available, considering only internal gaps:
+
+        >>> fep_ali.score_similarity(gaps='t', metrics='w', weights='iqm')
+        metrics                 AWSI.i    AWSI.q    AWSI.m
+        Fep15_danio_rerio     0.390678  0.914535  0.847681
+        Fep15_S_salar         0.512357  0.936388  0.882831
+        Fep15_O_mykiss        0.506231  0.934978  0.880440
+        Fep15_T_rubripess     0.504965  0.936560  0.881636
+        Fep15_T_nigroviridis  0.489316  0.922750  0.864419
+        Fep15_O_latipes       0.319700  0.889985  0.812769        
         """
         if not self.same_length():
             raise AlignmentError('score_similarity ERROR sequences are not aligned!')
@@ -1378,65 +1529,110 @@ class Alignment:
         else:
             if not isinstance(targets, Alignment):
                 raise AlignmentError(f'score_similarity ERROR "targets" argument must receive an Alignment, instead got {targets.__class__}')
-            if not targets.same_length():
+            if not targets.same_length() or targets.ali_length() != self.ali_length() :
                 raise AlignmentError('score_similarity ERROR "targets" argument does not have same alignment length as self')
 
         # compute weights: max conservation at this position (e.g. if A is most common letter, how common it is), except gaps
-        cmap=self.conservation_map()        
-        weights=cmap[cmap.index!='-'].max().rename('weight').rename_axis('position', axis=0)
+        #cmap=self.conservation_map()        
+        #weights=cmap[cmap.index!='-'].max().rename('weight').rename_axis('position', axis=0)
+
+        for g in gaps:
+            if not g in {'a', 'y', 'n', 't'}:
+                raise AlignmentError(f'score_similarity ERROR gaps argument "{g}" is not among accepted values: a, y, n, t')
+            
+        if type(weights) is str:
+            for w in weights:
+                if not w in {'m', 'i', 'q'}:
+                    raise AlignmentError(f'score_similarity ERROR weights argument "{w}" is not among accepted values: m, i, q')
+        else:
+            if len(weights) != self.ali_length():
+                raise AlignmentError('score_similarity ERROR weights argument is not the same length as the alignment')
+
+        for m in metrics:
+            if not m in {'i', 'w'}:
+                raise AlignmentError(f'score_similarity ERROR metrics argument "{m}" is not among accepted values: i, w')
         
+        ### rude and crude: one sequence at the time, using sequence_identity
         if method==1:
+            wei=self.conservation_weights(method=weights)
             return pd.DataFrame(
-                [[statistics.mean([sequence_identity(ts, s, gaps=gaps)    for n, s in self]),
-                  statistics.mean([weighted_sequence_identity(ts, s, weights, gaps=gaps)    for n, s in self])]                 
+                [[statistics.mean([sequtils.sequence_identity(ts, s, gaps=gaps)    for n, s in self]),
+                  statistics.mean([sequtils.weighted_sequence_identity(ts, s, wei, gaps=gaps)    for n, s in self])]                 
                  for tn, ts in targets  ], index=targets.names(), columns=['ASI', 'AWSI'])
 
-        if method==2:            
+        if method==2:
+            named_metrics=[]  if not 'i' in metrics else ['ASI']
+            if   'w' in metrics and (not type(weights) is str or len(weights)==1):
+                named_metrics.append('AWSI')
+            elif 'w' in metrics:
+                named_metrics.extend( ['AWSI.'+w  for w in weights] )
+                
             nps=self.to_numpy()
-            npt=targets.to_numpy()
-            wei=np.array(weights, dtype=np.float64)
-            
+            npt=targets.to_numpy()                       
             eq_matrix=np.char.equal( nps, npt[:,np.newaxis] )
+
+            # making the columns of output as complex as it may get, then simplify in case
+            out_columns=pd.MultiIndex.from_product( [list(gaps), named_metrics], names=['gaps', 'metrics'])
+            out=pd.DataFrame(index=targets.names(), columns=out_columns)
             
-            if gaps=='a':
-                selector=np.full(eq_matrix.shape, True, dtype=bool)
-            elif gaps=='n':
-                ## which positions are taken into account:  those in which neither target and selfseq is gap
-                selector=(npt!='-')[:, np.newaxis, :]  & (nps!='-')[np.newaxis, :, :]
-            elif gaps=='y':
-                selector=(npt!='-')[:, np.newaxis, :]  | (nps!='-')[np.newaxis, :, :]
-            elif gaps=='t':
-                selector=(  ~(targets.terminal_gap_mask())[:, np.newaxis, :] &
-                            ~(self.terminal_gap_mask())   [np.newaxis, :, :] &
-                            ((npt!='-')[:, np.newaxis, :]  | (nps!='-')[np.newaxis, :, :] ) )
+            for gaps_arg in gaps:
+                selector=sequtils.gap_selector( npt, nps, gaps_arg )
+            
+                # if gaps_arg=='a':
+                #     selector=np.full(eq_matrix.shape, True, dtype=bool)
+                # elif gaps_arg=='n':
+                #     ## which positions are taken into account:  those in which neither target and selfseq is gap
+                #     selector=(npt!='-')[:, np.newaxis, :]  & (nps!='-')[np.newaxis, :, :]
+                # elif gaps_arg=='y':
+                #     selector=(npt!='-')[:, np.newaxis, :]  | (nps!='-')[np.newaxis, :, :]
+                # elif gaps_arg=='t':
+                #     selector=(  ~(targets.terminal_gap_mask())[:, np.newaxis, :] &
+                #                 ~(self.terminal_gap_mask())   [np.newaxis, :, :] &
+                #                 ((npt!='-')[:, np.newaxis, :]  | (nps!='-')[np.newaxis, :, :] ) )
+
+                if 'i' in metrics:
+                    #asi=
+                    out[(gaps_arg, 'ASI')]=(
+                        sequtils.sequence_identity_matrix(npt, nps,
+                                                          selector=selector,
+                                                          eq_matrix=eq_matrix).mean(axis=1) )
+                    # ## matrix of length of alignments, i.e. the positions actually used for each comparison
+                    # ali_lengths=selector.sum(axis=2)
+
+                    # # matrix of sequence identities
+                    # si_matrix=(eq_matrix & selector).sum(axis=2)  /  ali_lengths
+
+                    # ############
+                    # # Average sequence identity: one row per target
+                    # asi=   si_matrix.mean(axis=1)
+                if 'w' in metrics:
+                    if not type(weights) is str:
+                        wei=np.array(weights, dtype='float64')
                         
-            ## matrix of length of alignments, i.e. the positions actually used for each comparison
-            ali_lengths=selector.sum(axis=2)
+                        # sum of weighted identities, divided by tot of weight across the ENTIRE alignment (not only selector)
+                        out[(gaps_arg, 'AWSI')]=(   ( (eq_matrix & selector)  * wei[np.newaxis, np.newaxis, :] ).sum(axis=2)
+                                                    / wei.sum() )
+                    else:
+                        for w in weights:
+                            wei=self.conservation_weights(method=w)
+                            colname='AWSI'   if len(weights)==1  else  'AWSI.'+w
+                            out[(gaps_arg, colname)]=(   ( (eq_matrix & selector)  * wei[np.newaxis, np.newaxis, :] ).sum(axis=2)
+                                                         / wei.sum() ).mean(axis=1)
+                            
 
-            # matrix of sequence identities
-            si_matrix=(eq_matrix & selector).sum(axis=2)  /  ali_lengths
+            if len(gaps)==1:
+                out.columns=out.columns.droplevel('gaps')
+            return out 
+                        
+                        
 
-            ############
-            # Average sequence identity: one row per target
-            asi=si_matrix.mean(axis=1)
+            # ############
+            # # Average sequence identity: one row per target
+            # awsi=swin.mean(axis=1)
 
-            # sum of weighted identities
-            swi=( (eq_matrix & selector)  * wei[np.newaxis, np.newaxis, :] ).sum(axis=2)
-
-            # tot weight per comparison
-            wpc=(wei[np.newaxis, np.newaxis, :]  * selector).sum(axis=2)
-
-            #### NOTE: we're normalizing by the total weights available in each comparison
-            #    may not be the way to go
-            swin=swi/wpc
-
-            ############
-            # Average sequence identity: one row per target
-            awsi=swin.mean(axis=1)
-
-            return pd.DataFrame( np.column_stack( (asi, awsi) ),
-                                 index=targets.names(),
-                                 columns=['ASI', 'AWSI']  )
+            # return pd.DataFrame( np.column_stack( (asi, awsi) ),
+            #                      index=targets.names(),
+            #                      columns=['ASI', 'AWSI']  )
  
         if method==3:
             if gaps != 'a':
@@ -1498,10 +1694,10 @@ class Alignment:
                 
 
 if __name__ == "__main__":
-    import doctest, sys
-    thepath = os.path.dirname(os.path.dirname( os.path.abspath( __file__)   )) + '/..'
-    os.chdir(thepath)
-    sys.path.insert(0, thepath)
-    
-    doctest.testmod()
+    pass
+    # import doctest, sys
+    # thepath = os.path.dirname(os.path.dirname( os.path.abspath( __file__)   )) + '/..'
+    # os.chdir(thepath)
+    # sys.path.insert(0, thepath)    
+    # doctest.testmod()
                     

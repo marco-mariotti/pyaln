@@ -19,6 +19,7 @@ methods for reading, processing, and writing alignments.
 	     
    tutorial
    alignment
+   sequtils
    genindex
        
 

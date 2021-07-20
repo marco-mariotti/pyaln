@@ -5,8 +5,9 @@ import pandas as pd
 import numpy as np
 import statistics
 from Bio import SeqIO, AlignIO, Seq, SeqRecord, Align
-from . import sequtils
-
+#from pyaln.sequtils import *
+from pyaln import sequtils
+#from . import sequtils
 
 MultipleSeqAlignment=Align.MultipleSeqAlignment
 SeqRecord=SeqRecord.SeqRecord
@@ -16,6 +17,13 @@ __all__=['Alignment', 'pyaln_folder']
 
 pyaln_folder = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath( __file__)   )))
+
+# do not remove:
+"""For docstrings examples to be successful, run:
+
+    >>> from pyaln import Alignment, pyaln_folder
+
+"""
 
 class AlignmentError(Exception):
     """Exceptions raised by the Alignment class """
@@ -134,11 +142,21 @@ class Alignment:
     ATTCG- seq1
     ATTCG- seq3
     <BLANKLINE>
+    
+    Index columns by providing list of (start, end) elements:
+
+    >>> ali[:, [(0,2), (5, 6)]]
+    # Alignment of 3 sequences and 3 positions
+    AT- seq1
+    --G seq2
+    AT- seq3
+    <BLANKLINE>
 
     Iterating over an alignment:
 
     >>> [(name, len(seq))   for name, seq in ali]
     [('seq1', 6), ('seq2', 6), ('seq3', 6)]
+
     """
 
     extension2format={'fa':'fasta', 'fasta':'fasta',
@@ -231,14 +249,14 @@ class Alignment:
         rows, cols=rows_and_cols
 
         if type(cols) is np.ndarray:
-            ali=self[rows,:].to_numpy()[:,cols]
+            ali=Alignment.from_numpy( self[rows,:].to_numpy()[:,cols], names=self.names(), descriptions=self.descriptions())
         else:
             ali=Alignment()
             if type(rows) is slice:                names=self._ord[rows]
             elif type(rows) is list:               names=rows
             elif type(rows) is int:                names=[self._ord[rows]]
             else:
-                raise AlignmentError(f'ERROR wrong type for rows! {type(rows)}')
+                raise AlignmentError(f'ERROR wrong type for indexing rows: {type(rows)}')
 
             if type(cols) is slice:                
                 for name in names:            
@@ -246,8 +264,8 @@ class Alignment:
                                 self.get_seq(name) [cols],
                                 desc=self.get_desc(name))
             elif type(cols) is list:
-                s=self.get_seq(name)
-                for name in names:            
+                for name in names:
+                    s=self.get_seq(name)                    
                     ali.add_seq(name,
                                 ''.join( [s[start:end]  for start, end in cols]),
                                 desc=self.get_desc(name))
@@ -305,6 +323,7 @@ class Alignment:
         >seq3 some desc
         ATT---
         <BLANKLINE>
+
         """
         
         if desc is None:
@@ -485,6 +504,7 @@ class Alignment:
         >seq3 obviously third
         ATTCG-
         <BLANKLINE>
+
         """       
         if not self.has_name(name):
             raise AlignmentError(f'set_desc ERROR alignment does not have {name}. Did you mean to use add_seq() instead?')
@@ -579,7 +599,7 @@ class Alignment:
         return [name for name in self._ord]
 
     def titles(self): 
-        """Returns a list of the all sequence titles  in the alignment
+        """Returns a list of all sequence titles in the alignment
 
         Each title is the concatenation of sequence name and description, separated by a space. 
         If the description is empty for an entry, only the name is returned
@@ -600,7 +620,27 @@ class Alignment:
         names: get all sequence names (their unique identifiers, without description)
         """               
         return [ ' '.join([name, self.get_desc(name)]).rstrip()  for name in self._ord ]
-       
+
+    def descriptions(self): 
+        """Returns the descriptions for all sequences in the alignment as list
+
+        Returns
+        -------
+        list of str
+            An ordered list of descriptions for each sequence in the alignment
+
+        Examples
+        --------
+        >>> ali=Alignment([ ('seq1 this is first', 'ATTCG-'), ('seq2 this is 2nd'  , '--TTGG'), ('seq3', 'ATTCG-')])
+        >>> ali.descriptions()
+        ['this is first', 'this is 2nd', '']
+                
+        See Also
+        --------
+        names:  get all sequence names (their unique identifiers, without description)
+        titles: get all sequence titles (name and description separated by space)
+        """               
+        return [ self.get_desc(name)  for name in self._ord ]
         
     def sequences(self):
         """Returns a list of the all sequences in the alignment
@@ -615,8 +655,34 @@ class Alignment:
         >>> ali=Alignment([ ('seq1 this is first', 'ATTCG-'), ('seq2 this is 2nd'  , '--TTGG'), ('seq3', 'ATTCG-')])
         >>> ali.sequences()
         ['ATTCG-', '--TTGG', 'ATTCG-']
+
         """               
         return [self.get_seq(name) for name in self._ord]    
+
+    def positions(self):
+        """Returns an iterator over the column indices of the alignment
+
+        This is qquivalent to range(self.ali_length())
+
+        Returns
+        -------
+        range
+            An iterator of int
+
+        Examples
+        --------
+        >>> ali=Alignment([ ('seq1 this is first', 'ATTCG-'), ('seq2 this is 2nd'  , '--TTGG'), ('seq3', 'ATTCG-')])
+        >>> for i in ali.positions():      print( ali.get_seq('seq1')[i] )
+        A
+        T
+        T
+        C
+        G
+        -
+
+        """               
+        
+        return range(self.ali_length())
     
     def has_name(self, name):
         """Checks whether the alignment contains a sequence with the name provided
@@ -639,6 +705,7 @@ class Alignment:
         True
         >>> ali.has_name('seq2 this is 2nd')  # note: the name would be 'seq2' only
         False
+
         """
         return name in self._seqs
             
@@ -730,9 +797,10 @@ class Alignment:
 
         Parameters
         ----------
-        other : Alignment
+        other : Alignment or str
             alignment that will be concatenated to the right of the self 
-            in the returned Alignment   
+            in the returned Alignment. If a string is provided, this same 
+            sequence is added to each sequence in self
 
         Returns
         -------
@@ -761,13 +829,20 @@ class Alignment:
         >seq3
         ATTCG-AATCGGCC
         <BLANKLINE>
+
         """
-        if self.names() != other.names():
-            raise AlignmentError(f'concatenate ERROR the two alignments must have the same sequence names!')
-        a=Alignment()
-        for name, seq in self:            
-            a.add_seq(name, seq + other.get_seq(name), desc=self.get_desc(name))
-        return a
+        if type(other) is str:
+            a=Alignment()
+            for name, seq in self:            
+                a.add_seq(name, seq + other, desc=self.get_desc(name))
+            return a
+        else:
+            if self.names() != other.names():
+                raise AlignmentError(f'concatenate ERROR the two alignments must have the same sequence names!')
+            a=Alignment()
+            for name, seq in self:            
+                a.add_seq(name, seq + other.get_seq(name), desc=self.get_desc(name))
+            return a
 
     def copy(self):
         """Returns a copy of the alignment
@@ -943,6 +1018,15 @@ class Alignment:
                         description=self.get_desc(name) )
              for name, seq in self])
 
+    @classmethod
+    def from_numpy(cls, nparray, names, descriptions=None):
+        sequences=np.apply_along_axis( ''.join, 1, nparray)
+        out=Alignment()
+        for i, n in enumerate(names):
+            out.add_seq(n, sequences[i],
+                        desc='' if descriptions is None else descriptions[i])
+        return out        
+        
     #@lru_cache(maxsize=max_cache_size)
     def to_numpy(self):
         """Returns a numpy 2-D array representation of the alignment, useful for vectorized sequence methods
@@ -1087,7 +1171,8 @@ class Alignment:
         ATTCG seq1
         --TTG seq2
         ATTCC seq3
-        <BLANKLINE>        
+        <BLANKLINE>
+
         """
         ### get positions, a bit of benchmark
         #  [all([s[pos]=='-'  for n,s in a])   for pos in range(a.ali_length())]   # 65.3 ms
@@ -1161,6 +1246,7 @@ class Alignment:
 
         >>> ali.consensus(0.6)
         'ATGCG-'
+
         """
         if ignore_gaps is None:
             return ''.join(self.conservation_map().apply(pd.Series.idxmax))
@@ -1421,8 +1507,7 @@ class Alignment:
             - 'a' : gaps are considered as any other character; even gap-to-gap matches are scored as identities.
             - 'y' : gaps are considered and considered mismatches. Positions that are gaps in both sequences are ignored.
             - 'n' : gaps are not considered. Positions that are gaps in either sequences compared are ignored.
-            - 't' : terminal gaps are trimmed. Positions that are terminal gaps in either sequences are ignored, 
-                    others are considered as in 'y'.
+            - 't' : terminal gaps are trimmed. Terminal gap positions in either sequences are ignored, others are considered as in 'y'.
      
             Multiple arguments may be concatenated (e.g. 'yn') to compute all of the possibilities.
 
@@ -1477,6 +1562,7 @@ class Alignment:
         MWAFLVLTFAVAA-GASETV-DNHTAAEEKLLIARGKLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_rubripess
         MWALLVLTFAVTV-GASEEV-KNQTAAEEKLVIARGTLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_nigroviridis
         MWAFVLIAFSVGA---SDS------SNSTAEVIARGKLMAPSVVGUAIKKLPELNRFLM...L Fep15_O_latipes
+        <BLANKLINE>
         
         >>> fep_ali.score_similarity()
         metrics                    ASI
@@ -1501,7 +1587,7 @@ class Alignment:
         Requesting AWSI as well as ASI, and testing both considering and omitting gaps:
 
         >>> fep_ali.score_similarity(gaps='yn', metrics='iw')
-        gaps                         y                   n
+        gaps                         y                   n          
         metrics                    ASI      AWSI       ASI      AWSI
         Fep15_danio_rerio     0.775362  0.847681  0.790391  0.847681
         Fep15_S_salar         0.823901  0.882831  0.835699  0.882831
@@ -1519,7 +1605,8 @@ class Alignment:
         Fep15_O_mykiss        0.506231  0.934978  0.880440
         Fep15_T_rubripess     0.504965  0.936560  0.881636
         Fep15_T_nigroviridis  0.489316  0.922750  0.864419
-        Fep15_O_latipes       0.319700  0.889985  0.812769        
+        Fep15_O_latipes       0.319700  0.889985  0.812769
+
         """
         if not self.same_length():
             raise AlignmentError('score_similarity ERROR sequences are not aligned!')
@@ -1693,11 +1780,11 @@ class Alignment:
             raise AlignmentError(f'score_similarity ERROR method not recognized {method}')
                 
 
-if __name__ == "__main__":
-    pass
-    # import doctest, sys
-    # thepath = os.path.dirname(os.path.dirname( os.path.abspath( __file__)   )) + '/..'
-    # os.chdir(thepath)
-    # sys.path.insert(0, thepath)    
-    # doctest.testmod()
+# if __name__ == "__main__":
+#     pass
+#     # import doctest, sys
+#     # thepath = os.path.dirname(os.path.dirname( os.path.abspath( __file__)   )) + '/..'
+#     # os.chdir(thepath)
+#     # sys.path.insert(0, thepath)    
+#     # doctest.testmod()
                     

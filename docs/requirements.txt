@@ -1,6 +1,6 @@
 sphinx==3.2.1
 sphinx_rtd_theme==0.5.2
-python==3.6
-pandas==1.2
-numpy==1.16
-biopython==1.46
+python==3.8.5
+pandas==1.2.4
+numpy==1.19.5
+biopython==1.78

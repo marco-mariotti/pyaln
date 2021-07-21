@@ -7,16 +7,18 @@ Welcome to pyaln's documentation!
 =================================
 
 The module pyaln is centered around the Alignment class, which provides access to convenient
-methods for reading, processing, and writing alignments.
+methods for reading, processing, and writing multiple sequence alignments.
 
-- To start, check the :doc:`tutorial`!
-- Find the full documentation at :doc:`alignment`
+- First time? After :doc:`installation`, check the :doc:`tutorial`
+- Find the documentation at :doc:`alignment`
+- Check additional methods in submodule :doc:`sequtils`
 - Here's a :doc:`genindex` of all methods and objects.
 
 .. toctree::
    :maxdepth: 1
    :caption: Contents:
-	     
+
+   installation
    tutorial
    alignment
    sequtils

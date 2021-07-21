@@ -419,6 +419,29 @@ class Alignment:
         ali_length: length of the alignment (i.e. number of columns)
         """
         return len(self._ord)
+
+    @property
+    def shape(self):
+        """Return the size of the alignment in its two dimensions, i.e. the number of sequences and alignment columns 
+
+        Returns
+        -------
+        tuple of int
+            (height, width), where height is the number of sequences in the alignment and 
+            width the number of columns
+
+        Examples
+        --------
+        >>> ali=Alignment([ ('seq1', 'ATTCG-'), ('seq2', '--TTGG'), ('seq3', 'ATTCG-')])
+        >>> ali.shape
+        (3, 6)
+
+        Note
+        ----
+        This method is presented as property for symmetry with Numpy array ``.shape``. 
+        However, this Alignment property is read-only.
+        """
+        return (self.n_seqs(), self.ali_length())
         
     def set_seq(self, name, sequence):
         """Change the sequence of an entry in-place.
@@ -1466,7 +1489,7 @@ class Alignment:
             return z.max(axis=0)
         elif method=='i':
             log2_arr=np.log2(z, out=np.zeros(z.shape), where= z!=0 )
-            return (z * log2_arr).sum(axis=0)
+            return 2- (z * - log2_arr).sum(axis=0)
         elif method=='q':
             return (z * np.square(z)).sum(axis=0)
         
@@ -1627,8 +1650,9 @@ class Alignment:
             if not g in {'a', 'y', 'n', 't'}:
                 raise AlignmentError(f'score_similarity ERROR gaps argument "{g}" is not among accepted values: a, y, n, t')
             
-        if type(weights) is str:
+        if type(weights) is str:            
             for w in weights:
+                break  ### debug
                 if not w in {'m', 'i', 'q'}:
                     raise AlignmentError(f'score_similarity ERROR weights argument "{w}" is not among accepted values: m, i, q')
         else:
@@ -1701,7 +1725,8 @@ class Alignment:
                                                     / wei.sum() )
                     else:
                         for w in weights:
-                            wei=self.conservation_weights(method=w)
+                            wei=self.conservation_weights(method=w) if w!='s' else np.ones(  self.ali_length()  )
+                            
                             colname='AWSI'   if len(weights)==1  else  'AWSI.'+w
                             out[(gaps_arg, colname)]=(   ( (eq_matrix & selector)  * wei[np.newaxis, np.newaxis, :] ).sum(axis=2)
                                                          / wei.sum() ).mean(axis=1)

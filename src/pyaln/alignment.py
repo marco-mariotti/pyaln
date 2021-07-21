@@ -50,7 +50,7 @@ class Alignment:
         - The `rows_selector` can be an integer (i.e., the vertical position of 
           the sequence in the alignment), or a slice thereof (e.g. `2:5`), or a list of sequence names.
         - The `column_selector` is a integer index (i.e. the horizontal position in the alignment),
-          or a slice thereof, or a Numpy boolean array. See examples below. 
+          or a slice thereof, or a boolean Numpy array / Pandas Series. See examples below. 
 
 
     Iterating over an Alignment will yield tuples like `(name, sequence)`. 
@@ -74,11 +74,11 @@ class Alignment:
     >>> ali
     # Alignment of 6 sequences and 138 positions
     MWLTLVALLALCATGRTAENLSESTTDQDKLVIARGKLVAPSVVGUSIKKMPELYNFLM...L Fep15_danio_rerio
-    MWAFLLLTLAFSATGMTEED-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPALYMFLM...L Fep15_S_salar
-    MWIFLLLTLAFSATGMTEEN-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPELYTFLM...L Fep15_O_mykiss
-    MWAFLVLTFAVAA-GASETV-DNHTAAEEKLLIARGKLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_rubripess
-    MWALLVLTFAVTV-GASEEV-KNQTAAEEKLVIARGTLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_nigroviridis
-    MWAFVLIAFSVGA---SDS------SNSTAEVIARGKLMAPSVVGUAIKKLPELNRFLM...L Fep15_O_latipes
+    MWAFLLLTLAFSATGMTEE-DVTDTAIEERPVIAKGILKAPSVVGUAIKKMPALYMFLM...L Fep15_S_salar
+    MWIFLLLTLAFSATGMTEE-NVTDTAIEERPVIAKGILKAPSVVGUAIKKMPELYTFLM...L Fep15_O_mykiss
+    MWAFLVLTFAVAA-GASET-VDNHTAAEEKLLIARGKLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_rubripes
+    MWALLVLTFAVTV-GASEE-VKNQTAAEEKLVIARGTLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_nigroviridis
+    MWAFVLIAFSV---GASDS--SNSTAE----VIARGKLMAPSVVGUAIKKLPELNRFLM...L Fep15_O_latipes
     <BLANKLINE>
 
     Many file formats are supported:
@@ -87,11 +87,11 @@ class Alignment:
     >>> ali
     # Alignment of 6 sequences and 138 positions
     MWLTLVALLALCATGRTAENLSESTTDQDKLVIARGKLVAPSVVGUSIKKMPELYNFLM...L Fep15_danio_rerio
-    MWAFLLLTLAFSATGMTEED-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPALYMFLM...L Fep15_S_salar
-    MWIFLLLTLAFSATGMTEEN-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPELYTFLM...L Fep15_O_mykiss
-    MWAFLVLTFAVAA-GASETV-DNHTAAEEKLLIARGKLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_rubripess
-    MWALLVLTFAVTV-GASEEV-KNQTAAEEKLVIARGTLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_nigroviridis
-    MWAFVLIAFSVGA---SDS------SNSTAEVIARGKLMAPSVVGUAIKKLPELNRFLM...L Fep15_O_latipes
+    MWAFLLLTLAFSATGMTEE-DVTDTAIEERPVIAKGILKAPSVVGUAIKKMPALYMFLM...L Fep15_S_salar
+    MWIFLLLTLAFSATGMTEE-NVTDTAIEERPVIAKGILKAPSVVGUAIKKMPELYTFLM...L Fep15_O_mykiss
+    MWAFLVLTFAVAA-GASET-VDNHTAAEEKLLIARGKLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_rubripes
+    MWALLVLTFAVTV-GASEE-VKNQTAAEEKLVIARGTLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_nigroviridis
+    MWAFVLIAFSV---GASDS--SNSTAE----VIARGKLMAPSVVGUAIKKLPELNRFLM...L Fep15_O_latipes
     <BLANKLINE>
 
     Initializing from iterable (in this case a list):
@@ -248,7 +248,7 @@ class Alignment:
             raise AlignmentError('__getitem__ ERROR you must specify an index for rows (names) and one for columns (sequence positions), e.g. ali[5:9,10:20] ali[:,:-5]')
         rows, cols=rows_and_cols
 
-        if type(cols) is np.ndarray:
+        if type(cols) in {np.ndarray, pd.Series}:
             ali=Alignment.from_numpy( self[rows,:].to_numpy()[:,cols], names=self.names(), descriptions=self.descriptions())
         else:
             ali=Alignment()
@@ -1043,6 +1043,30 @@ class Alignment:
 
     @classmethod
     def from_numpy(cls, nparray, names, descriptions=None):
+        """Class method to instance an Alignment object from a numpy array.
+
+        Parameters
+        ----------
+        nparray : np.ndarray
+            analogous to object returned by Alignment.to_numpy(), it must have one row per sequence, and one
+            column per alignment position. Its dtype must be is np.str\_
+        
+        names : list of str
+            ordered list of sequence names (i.e. identifiers) 
+
+        descriptions : list of str, optional
+            ordered list of sequence description. If not provided, all descriptions are set to ''
+        
+        
+        Returns
+        -------
+        Alignment
+            new alignment object
+
+        See also
+        --------
+        to_numpy
+        """
         sequences=np.apply_along_axis( ''.join, 1, nparray)
         out=Alignment()
         for i, n in enumerate(names):
@@ -1050,7 +1074,7 @@ class Alignment:
                         desc='' if descriptions is None else descriptions[i])
         return out        
         
-    #@lru_cache(maxsize=max_cache_size)
+    @lru_cache(maxsize=max_cache_size)
     def to_numpy(self):
         """Returns a numpy 2-D array representation of the alignment, useful for vectorized sequence methods
         
@@ -1157,12 +1181,12 @@ class Alignment:
         else:
             return c/self.n_seqs()
 
-    #@lru_cache(maxsize=max_cache_size)
+    @lru_cache(maxsize=max_cache_size)
     def _counts_per_column(self):
         # for some reason floats are returned, though it's only counts. Couldn't remedy it
         return self.to_pandas(use_names=False).apply(pd.value_counts, 0, normalize=False).fillna(0)
                 
-    def trim_gaps(self, pct=1.0, inplace=False):
+    def trim_gaps(self, pct=1.0, count=None, inplace=False):
         """Removes the alignment columns with more gaps than specified
 
         By default, a new alignment without the columns identified as 'too gappy' is returned.        
@@ -1171,6 +1195,9 @@ class Alignment:
         ----------
         pct     : float, default:1.0
             minimal gap frequency (from 0.0 to 1.0) for a column to be removed
+        count   : int, optional
+            defines the minimum absolute number of gaps for a column to be removed.
+            It is an alternative way to select columns, which overrides the pct argument
         inplace : bool, default:False
             whether the column removal should be done in place. If not, a new Alignment is returned instead
 
@@ -1196,6 +1223,13 @@ class Alignment:
         ATTCC seq3
         <BLANKLINE>
 
+        >>> ali.trim_gaps(count=1)
+        # Alignment of 3 sequences and 3 positions
+        TCG seq1
+        TTG seq2
+        TCC seq3
+        <BLANKLINE>        
+
         """
         ### get positions, a bit of benchmark
         #  [all([s[pos]=='-'  for n,s in a])   for pos in range(a.ali_length())]   # 65.3 ms
@@ -1213,7 +1247,9 @@ class Alignment:
         # else:
 
         #      .mean(axis=0) below returns 1-D array, size=ali_length, with proportion of gaps                    
-        cols_selector=self.gap_mask().mean(axis=0) >= pct
+        cols_selector=( (self.to_numpy()=='-').mean(axis=0) >= pct
+                        if count is None else
+                        (self.to_numpy()=='-').sum(axis=0)  >= count )
         
         seqs=np.apply_along_axis( ''.join, 1, self.to_numpy()[:,~cols_selector])        
         if inplace:
@@ -1226,7 +1262,7 @@ class Alignment:
                 a.add_seq(name, seqs[i], desc=self.get_desc(name))
             return a    
         
-    def consensus(self, ignore_gaps=None ): # to do: what to do with gaps?
+    def consensus(self, ignore_gaps=None ): 
         """Compute the consensus sequence, taking the most represented character for each column
 
         Parameters
@@ -1278,60 +1314,60 @@ class Alignment:
             cmap.loc['-'] [ cmap.loc['-']<ignore_gaps ] = np.nan
             return ''.join(cmap.apply(pd.Series.idxmax))
 
-    def gap_mask(self):
-        """Returns a boolean numpy array marking gaps
+    # def gap_mask(self):
+    #     """Returns a boolean numpy array marking gaps
         
-        Returns
-        -------
-        np.ndarray
-            The returned array has one row per sequence and one column per alignment position.           
-            Each value is a boolean indicating presence of a gap
-            Note that rows are indexed by integers, not by sequence names
+    #     Returns
+    #     -------
+    #     np.ndarray
+    #         The returned array has one row per sequence and one column per alignment position.           
+    #         Each value is a boolean indicating presence of a gap
+    #         Note that rows are indexed by integers, not by sequence names
 
-        Examples
-        --------
-        >>> ali= Alignment([ ('seq1', 'ATTCG-'), ('seq2'  , '--TTG-'), ('seq3', 'AT--CG')])
-        >>> ali.gap_mask()
-        array([[False, False, False, False, False,  True],
-               [ True,  True, False, False, False,  True],
-               [False, False,  True,  True, False, False]])
+    #     Examples
+    #     --------
+    #     >>> ali= Alignment([ ('seq1', 'ATTCG-'), ('seq2'  , '--TTG-'), ('seq3', 'AT--CG')])
+    #     >>> ali.gap_mask()
+    #     array([[False, False, False, False, False,  True],
+    #            [ True,  True, False, False, False,  True],
+    #            [False, False,  True,  True, False, False]])
 
-        See also
-        --------
-        terminal_gap_mask
-        """
-        return self.to_numpy()=='-'
+    #     See also
+    #     --------
+    #     terminal_gap_mask
+    #     """
+    #     return self.to_numpy()=='-'
 
-    def terminal_gap_mask(self):
-        """Returns a boolean numpy array marking terminal gaps
+    # def terminal_gap_mask(self):
+    #     """Returns a boolean numpy array marking terminal gaps
         
-        Terminal gaps are those that have only gaps to their left or to their right
+    #     Terminal gaps are those that have only gaps to their left or to their right
 
-        Returns
-        -------
-        np.ndarray
-            The returned array has one row per sequence and one column per alignment position.           
-            Each value is a boolean indicating presence of a terminal gap
-            Note that rows are indexed by integers, not by sequence names
+    #     Returns
+    #     -------
+    #     np.ndarray
+    #         The returned array has one row per sequence and one column per alignment position.           
+    #         Each value is a boolean indicating presence of a terminal gap
+    #         Note that rows are indexed by integers, not by sequence names
 
-        Examples
-        --------
-        >>> ali= Alignment([ ('seq1', 'ATTCG-'), ('seq2'  , '--TTG-'), ('seq3', 'AT--CG')])
-        >>> ali.terminal_gap_mask()
-        array([[False, False, False, False, False,  True],
-               [ True,  True, False, False, False,  True],
-               [False, False, False, False, False, False]])
+    #     Examples
+    #     --------
+    #     >>> ali= Alignment([ ('seq1', 'ATTCG-'), ('seq2'  , '--TTG-'), ('seq3', 'AT--CG')])
+    #     >>> ali.terminal_gap_mask()
+    #     array([[False, False, False, False, False,  True],
+    #            [ True,  True, False, False, False,  True],
+    #            [False, False, False, False, False, False]])
 
-        See also
-        --------
-        gap_mask
-        """        
-        return np.apply_along_axis(
-            # below: each bool array is as long as sequence;  function is applied to each row
-                      #  bool array: is left term gap? # or # bool array: is right term gap?            
-            lambda x: ( np.logical_and.accumulate(x)  |  np.logical_and.accumulate( x[::-1] )[::-1] ),
-            1,  self.gap_mask())
-        #tested: computing per row is faster than whole matrix
+    #     See also
+    #     --------
+    #     gap_mask
+    #     """        
+    #     return np.apply_along_axis(
+    #         # below: each bool array is as long as sequence;  function is applied to each row
+    #                   #  bool array: is left term gap? # or # bool array: is right term gap?            
+    #         lambda x: ( np.logical_and.accumulate(x)  |  np.logical_and.accumulate( x[::-1] )[::-1] ),
+    #         1,  self.gap_mask())
+    #     #tested: computing per row is faster than whole matrix
 
     def position_map(self):
         """Compute a numerical matrix instrumental to map alignment positions to sequence positions (and reverse)
@@ -1475,12 +1511,28 @@ class Alignment:
                 return i
         raise IndexError(f'position_in_ali ERROR pos_in_seq requested ({pos_in_seq}) was greater than sequence length ({self.get_seq(name)})')
 
+    def column_weights(self, method='m'):
+        """Computes weights indicating the relative importance of the different alignment columns, based on their level of conservation.
 
+        Parameters
+        ----------
+        method : str
+            One of these arguments:
+            - 'm' : maximum frequency of non-gap character in self
+            - 'i' : information content, i.e. 2- sum(p*log2(p)) where p is frequency of non-gap characters
+            - 'q' : quadratic sum, i.e. sum(p*p) where p is frequency of non-gap characters
+        
+        Returns
+        -------
+        np.ndarray
+            Numpy array of float numbers, of the same length as the alignment (n. of columns) indicating the different weights
 
-    def conservation_weights(self, method='m'):
-        """ """
+        See also
+        --------
+        score_similarity
+        """        
         if not method in {'m', 'i', 'q'}:
-            raise AlignmentError("conservation_weights ERROR argument is not among accepted values {m, i, q}")
+            raise AlignmentError("column_weights ERROR argument is not among accepted values {m, i, q}")
         cmap=self.conservation_map()
         z=cmap[cmap.index!='-'].to_numpy()
         if z.size==0:
@@ -1492,10 +1544,6 @@ class Alignment:
             return 2- (z * - log2_arr).sum(axis=0)
         elif method=='q':
             return (z * np.square(z)).sum(axis=0)
-        
-                                 
-        
-        
         
     
     def score_similarity(self, targets=None, gaps='y', metrics='i', weights='m',
@@ -1509,8 +1557,9 @@ class Alignment:
 
         The default use of this function is to compute the Average Sequence Identity (*ASI*) of targets,
         obtained by performing pairwise comparisons between each target and all sequences in self, and averaging.
-        The definition of sequence identity varies as gaps may be counted in different ways, as specified by 
-        the gaps argument.
+        The definition of sequence identity varies as **gaps may be counted in different ways**, as specified by 
+        the gaps argument. For explanatory examples, see
+        `this page <https://pyaln.readthedocs.io/en/latest/tutorial.html#sequence-identity>`_ .
 
         Besides *ASI*, a variant called *AWSI* (Average Weighted Sequence Identity) is available, wherein 
         different alignment columns are given different *weight* when averaging. Various built-in methods 
@@ -1519,7 +1568,6 @@ class Alignment:
         
         Parameters
         ----------
-
         targets : Alignment, optional
             sequences for which the similarity metrics are requested, provided as an Alignment instance.
             The sequences must be aligned to the self Alignment. If not provided, self is taken as targets, 
@@ -1527,10 +1575,10 @@ class Alignment:
 
         gaps : str, default:'y'
             defines how to take into account gaps when comparing sequences pairwise. Possible values:
-            - 'a' : gaps are considered as any other character; even gap-to-gap matches are scored as identities.
             - 'y' : gaps are considered and considered mismatches. Positions that are gaps in both sequences are ignored.
             - 'n' : gaps are not considered. Positions that are gaps in either sequences compared are ignored.
             - 't' : terminal gaps are trimmed. Terminal gap positions in either sequences are ignored, others are considered as in 'y'.
+            - 'a' : gaps are considered as any other character; even gap-to-gap matches are scored as identities.
      
             Multiple arguments may be concatenated (e.g. 'yn') to compute all of the possibilities.
 
@@ -1580,55 +1628,55 @@ class Alignment:
         >>> fep_ali
         # Alignment of 6 sequences and 138 positions
         MWLTLVALLALCATGRTAENLSESTTDQDKLVIARGKLVAPSVVGUSIKKMPELYNFLM...L Fep15_danio_rerio
-        MWAFLLLTLAFSATGMTEED-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPALYMFLM...L Fep15_S_salar
-        MWIFLLLTLAFSATGMTEEN-VTDTAIEERPVIAKGILKAPSVVGUAIKKMPELYTFLM...L Fep15_O_mykiss
-        MWAFLVLTFAVAA-GASETV-DNHTAAEEKLLIARGKLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_rubripess
-        MWALLVLTFAVTV-GASEEV-KNQTAAEEKLVIARGTLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_nigroviridis
-        MWAFVLIAFSVGA---SDS------SNSTAEVIARGKLMAPSVVGUAIKKLPELNRFLM...L Fep15_O_latipes
+        MWAFLLLTLAFSATGMTEE-DVTDTAIEERPVIAKGILKAPSVVGUAIKKMPALYMFLM...L Fep15_S_salar
+        MWIFLLLTLAFSATGMTEE-NVTDTAIEERPVIAKGILKAPSVVGUAIKKMPELYTFLM...L Fep15_O_mykiss
+        MWAFLVLTFAVAA-GASET-VDNHTAAEEKLLIARGKLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_rubripes
+        MWALLVLTFAVTV-GASEE-VKNQTAAEEKLVIARGTLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_nigroviridis
+        MWAFVLIAFSV---GASDS--SNSTAE----VIARGKLMAPSVVGUAIKKLPELNRFLM...L Fep15_O_latipes
         <BLANKLINE>
-        
+
         >>> fep_ali.score_similarity()
         metrics                    ASI
-        Fep15_danio_rerio     0.775362
-        Fep15_S_salar         0.823901
-        Fep15_O_mykiss        0.821459
-        Fep15_T_rubripess     0.824697
-        Fep15_T_nigroviridis  0.808872
-        Fep15_O_latipes       0.747919
+        Fep15_danio_rerio     0.777778
+        Fep15_S_salar         0.826334
+        Fep15_O_mykiss        0.822684
+        Fep15_T_rubripes      0.829599
+        Fep15_T_nigroviridis  0.815000
+        Fep15_O_latipes       0.767438
 
         If we choose to not consider gap positions, the score increases:
 
         >>> fep_ali.score_similarity(gaps='n')
         metrics                    ASI
-        Fep15_danio_rerio     0.790391
-        Fep15_S_salar         0.835699
-        Fep15_O_mykiss        0.833154
-        Fep15_T_rubripess     0.837398
-        Fep15_T_nigroviridis  0.828789
-        Fep15_O_latipes       0.784919
+        Fep15_danio_rerio     0.793051
+        Fep15_S_salar         0.838283
+        Fep15_O_mykiss        0.834522
+        Fep15_T_rubripes      0.842566
+        Fep15_T_nigroviridis  0.835351
+        Fep15_O_latipes       0.805693
         
         Requesting AWSI as well as ASI, and testing both considering and omitting gaps:
 
         >>> fep_ali.score_similarity(gaps='yn', metrics='iw')
         gaps                         y                   n          
         metrics                    ASI      AWSI       ASI      AWSI
-        Fep15_danio_rerio     0.775362  0.847681  0.790391  0.847681
-        Fep15_S_salar         0.823901  0.882831  0.835699  0.882831
-        Fep15_O_mykiss        0.821459  0.880440  0.833154  0.880440
-        Fep15_T_rubripess     0.824697  0.881636  0.837398  0.881636
-        Fep15_T_nigroviridis  0.808872  0.864419  0.828789  0.864419
-        Fep15_O_latipes       0.747919  0.812769  0.784919  0.812769
+        Fep15_danio_rerio     0.777778  0.847123  0.793051  0.856044
+        Fep15_S_salar         0.826334  0.885040  0.838283  0.893412
+        Fep15_O_mykiss        0.822684  0.882183  0.834522  0.890497
+        Fep15_T_rubripes      0.829599  0.887255  0.842566  0.896094
+        Fep15_T_nigroviridis  0.815000  0.874389  0.835351  0.891288
+        Fep15_O_latipes       0.767438  0.834809  0.805693  0.860639
 
         Computing AWSI with all possible weights available, considering only internal gaps:
 
         >>> fep_ali.score_similarity(gaps='t', metrics='w', weights='iqm')
         metrics                 AWSI.i    AWSI.q    AWSI.m
-        Fep15_danio_rerio     0.390678  0.914535  0.847681
-        Fep15_S_salar         0.512357  0.936388  0.882831
-        Fep15_O_mykiss        0.506231  0.934978  0.880440
-        Fep15_T_rubripess     0.504965  0.936560  0.881636
-        Fep15_T_nigroviridis  0.489316  0.922750  0.864419
-        Fep15_O_latipes       0.319700  0.889985  0.812769
+        Fep15_danio_rerio     0.881664  0.913531  0.847123
+        Fep15_S_salar         0.912174  0.937773  0.885040
+        Fep15_O_mykiss        0.910436  0.936245  0.882183
+        Fep15_T_rubripes      0.915546  0.938932  0.887255
+        Fep15_T_nigroviridis  0.901011  0.929572  0.874389
+        Fep15_O_latipes       0.872316  0.903712  0.834809
 
         """
         if not self.same_length():
@@ -1652,7 +1700,6 @@ class Alignment:
             
         if type(weights) is str:            
             for w in weights:
-                break  ### debug
                 if not w in {'m', 'i', 'q'}:
                     raise AlignmentError(f'score_similarity ERROR weights argument "{w}" is not among accepted values: m, i, q')
         else:
@@ -1665,12 +1712,13 @@ class Alignment:
         
         ### rude and crude: one sequence at the time, using sequence_identity
         if method==1:
-            wei=self.conservation_weights(method=weights)
+            wei=self.column_weights(method=weights)
             return pd.DataFrame(
                 [[statistics.mean([sequtils.sequence_identity(ts, s, gaps=gaps)    for n, s in self]),
                   statistics.mean([sequtils.weighted_sequence_identity(ts, s, wei, gaps=gaps)    for n, s in self])]                 
                  for tn, ts in targets  ], index=targets.names(), columns=['ASI', 'AWSI'])
-
+        
+        ### vectorized
         if method==2:
             named_metrics=[]  if not 'i' in metrics else ['ASI']
             if   'w' in metrics and (not type(weights) is str or len(weights)==1):
@@ -1689,49 +1737,24 @@ class Alignment:
             for gaps_arg in gaps:
                 selector=sequtils.gap_selector( npt, nps, gaps_arg )
             
-                # if gaps_arg=='a':
-                #     selector=np.full(eq_matrix.shape, True, dtype=bool)
-                # elif gaps_arg=='n':
-                #     ## which positions are taken into account:  those in which neither target and selfseq is gap
-                #     selector=(npt!='-')[:, np.newaxis, :]  & (nps!='-')[np.newaxis, :, :]
-                # elif gaps_arg=='y':
-                #     selector=(npt!='-')[:, np.newaxis, :]  | (nps!='-')[np.newaxis, :, :]
-                # elif gaps_arg=='t':
-                #     selector=(  ~(targets.terminal_gap_mask())[:, np.newaxis, :] &
-                #                 ~(self.terminal_gap_mask())   [np.newaxis, :, :] &
-                #                 ((npt!='-')[:, np.newaxis, :]  | (nps!='-')[np.newaxis, :, :] ) )
-
                 if 'i' in metrics:
-                    #asi=
                     out[(gaps_arg, 'ASI')]=(
                         sequtils.sequence_identity_matrix(npt, nps,
                                                           selector=selector,
                                                           eq_matrix=eq_matrix).mean(axis=1) )
-                    # ## matrix of length of alignments, i.e. the positions actually used for each comparison
-                    # ali_lengths=selector.sum(axis=2)
-
-                    # # matrix of sequence identities
-                    # si_matrix=(eq_matrix & selector).sum(axis=2)  /  ali_lengths
-
-                    # ############
-                    # # Average sequence identity: one row per target
-                    # asi=   si_matrix.mean(axis=1)
                 if 'w' in metrics:
-                    if not type(weights) is str:
-                        wei=np.array(weights, dtype='float64')
-                        
-                        # sum of weighted identities, divided by tot of weight across the ENTIRE alignment (not only selector)
-                        out[(gaps_arg, 'AWSI')]=(   ( (eq_matrix & selector)  * wei[np.newaxis, np.newaxis, :] ).sum(axis=2)
-                                                    / wei.sum() )
-                    else:
-                        for w in weights:
-                            wei=self.conservation_weights(method=w) if w!='s' else np.ones(  self.ali_length()  )
-                            
-                            colname='AWSI'   if len(weights)==1  else  'AWSI.'+w
-                            out[(gaps_arg, colname)]=(   ( (eq_matrix & selector)  * wei[np.newaxis, np.newaxis, :] ).sum(axis=2)
-                                                         / wei.sum() ).mean(axis=1)
-                            
+                    ws=( [(  w, self.column_weights(method=w)  )   for w in weights]
+                         if type(weights) is str
+                         else  [(None, np.array(weights, dtype='float64'))]  )
 
+                    for w, wei in ws:
+                        wei=self.column_weights(method=w) 
+                        selwei=selector * wei[np.newaxis, np.newaxis, :]
+                        
+                        colname='AWSI'   if len(ws)==1  else  'AWSI.'+w
+                        out[(gaps_arg, colname)]=(  ( (eq_matrix * selwei ).sum(axis=2)
+                                                      /  selwei.sum(axis=2) )
+                                                    .mean(axis=1) )
             if len(gaps)==1:
                 out.columns=out.columns.droplevel('gaps')
             return out 
@@ -1746,70 +1769,71 @@ class Alignment:
             #                      index=targets.names(),
             #                      columns=['ASI', 'AWSI']  )
  
-        if method==3:
-            if gaps != 'a':
-                raise AlignmentError(f"score_similarity ERROR gaps {gaps} with method {method} is not implemented")
-            else: 
-                #cmap=self.conservation_map()
-                mc=pd.DataFrame( cmap.unstack() ).set_axis(['conservation'], axis=1).rename_axis( ['position', 'letter'] )
+        # if method==3:
+        #     if gaps != 'a':
+        #         raise AlignmentError(f"score_similarity ERROR gaps {gaps} with method {method} is not implemented")
+        #     else: 
+        #         cmap=self.conservation_map()
+        #         mc=pd.DataFrame( cmap.unstack() ).set_axis(['conservation'], axis=1).rename_axis( ['position', 'letter'] )
 
-                # removing lines corresponding to gaps: we don't want to score them positively. Later in merging they'll be 0
-                #if not gaps=='a':
-                #    mc=mc[  ~mc.index.isin(['-'], level='letter') ]
-                """                 conservation
-                position letter
-                0        A                0.6
-                         C                0.0
-                         D                0.1
-                         E                0.0
-                ...                      ...
-                """
+        #         # removing lines corresponding to gaps: we don't want to score them positively. Later in merging they'll be 0
+        #         #if not gaps=='a':
+        #         #    mc=mc[  ~mc.index.isin(['-'], level='letter') ]
+        #         """                 conservation
+        #         position letter
+        #         0        A                0.6
+        #                  C                0.0
+        #                  D                0.1
+        #                  E                0.0
+        #         ...                      ...
+        #         """
 
-                mts=( targets.to_pandas(use_names=True).unstack().rename('letter')
-                      .rename_axis( ['position', 'name']).reset_index(1).set_index('letter', append=True) )
-                """              name
-                position letter
-                0        A       seq1
-                         -       seq2
-                         A       seq3
-                """
+        #         mts=( targets.to_pandas(use_names=True).unstack().rename('letter')
+        #               .rename_axis( ['position', 'name']).reset_index(1).set_index('letter', append=True) )
+        #         """              name
+        #         position letter
+        #         0        A       seq1
+        #                  -       seq2
+        #                  A       seq3
+        #         """
 
-                ## mask by gaps here ??
-                #######
-                jt=mts.join(mc, on=None, how='left').rename(columns={'conservation':'av_identity'})    ##join on index, add NAs if missing from mts
-                """              name  av_identity
-                position letter
-                0        -       seq2      0.333333
-                         A       seq1      0.666667
-                         A       seq3      0.666667
-                1        -       seq2      0.333333                """
-                # setting score of gaps (and also characters present in targets but not in self) from Na to 0
-                jt.fillna(value=0, inplace=True)
+        #         ## mask by gaps here ??
+        #         #######
+        #         jt=mts.join(mc, on=None, how='left').rename(columns={'conservation':'av_identity'})    ##join on index, add NAs if missing from mts
+        #         """              name  av_identity
+        #         position letter
+        #         0        -       seq2      0.333333
+        #                  A       seq1      0.666667
+        #                  A       seq3      0.666667
+        #         1        -       seq2      0.333333                """
+        #         # setting score of gaps (and also characters present in targets but not in self) from Na to 0
+        #         jt.fillna(value=0, inplace=True)
 
-                ## adding weights per ali position 
-                jt=jt.join(weights,   on='position',  how='left')
-                """              name    av_identity weight
-                position letter
-                0        -       seq2      0.333333  0.666667
-                         A       seq1      0.666667  0.666667
-                         A       seq3      0.666667  0.666667
-                1        -       seq2      0.333333  0.666667
-                         T       seq1      0.666667  0.666667                """
+        #         if type(weights) is str and len(weights)>1:
+        #             raise AlignmentError('error not implemented')
+                
+        #         wei=(np.array(weights, dtype='float64')
+        #                if not type(weights) is str else
+        #               self.column_weights(weights))            
+        #         wei=pd.Series(wei)
+        #         wei.index.name='position'
+        #         wei.name='weight'
+                
+        #         ## adding weights per ali position 
+        #         jt=jt.join(wei,  on='position',  how='right') 
+        #         """              name    av_identity weight
+        #         position letter
+        #         0        -       seq2      0.333333  0.666667
+        #                  A       seq1      0.666667  0.666667
+        #                  A       seq3      0.666667  0.666667
+        #         1        -       seq2      0.333333  0.666667
+        #                  T       seq1      0.666667  0.666667                """
 
-                jt['w_av_identity']=jt['av_identity']*jt['weight']
-                scores=jt.drop('weight', axis=1).groupby('name').mean().rename(columns={'av_identity':'ASI',  'w_av_identity':'AWSI' })
+        #         jt['w_av_identity']=jt['av_identity']*jt['weight']
+        #         scores=jt.drop('weight', axis=1).groupby('name').mean().rename(columns={'av_identity':'ASI',  'w_av_identity':'AWSI' })
 
-                return scores.loc[self.names()]  
+        #         return scores.loc[self.names()]  
                 
         else:
             raise AlignmentError(f'score_similarity ERROR method not recognized {method}')
                 
-
-# if __name__ == "__main__":
-#     pass
-#     # import doctest, sys
-#     # thepath = os.path.dirname(os.path.dirname( os.path.abspath( __file__)   )) + '/..'
-#     # os.chdir(thepath)
-#     # sys.path.insert(0, thepath)    
-#     # doctest.testmod()
-                    

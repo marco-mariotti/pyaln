@@ -80,12 +80,13 @@ you will obtain a reduced representation, showing its number of sequences and le
   MWALLVLTFAVTV-GASEE-VKNQTAAEEKLVIARGTLLAPSVVGUGIKKMPELHHFLM...L Fep15_T_nigroviridis
   MWAFVLIAFSV---GASDS--SNSTAE----VIARGKLMAPSVVGUAIKKLPELNRFLM...L Fep15_O_latipes
   <BLANKLINE>
-  
+
+
 However, note that this representation may not include the full sequence, and omits
 descriptions.
 
-The :func:`~pyaln.Alignment.write` method of Alignment offers a variety of output formats
-(again through Bio.AlignIO, `here's the full list <https://biopython.org/wiki/AlignIO>`_).
+On the other hand, :func:`~pyaln.Alignment.write` method of Alignment offers a variety of output formats
+(again through Bio.AlignIO, `see the full list here <https://biopython.org/wiki/AlignIO>`_ ).
 The most common, *fasta*, includes sequence descriptions::
   
   >>> ex_ali=Alignment([ ('seq1 description1', 'ATTCG-'), ('seq2 desc2', '--TTGG'), ('seq3', 'ATTCG-')])

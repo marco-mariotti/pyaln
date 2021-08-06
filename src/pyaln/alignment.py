@@ -1750,10 +1750,11 @@ class Alignment:
                     for w, wei in ws:
                         wei=self.column_weights(method=w) 
                         selwei=selector * wei[np.newaxis, np.newaxis, :]
-                        
+                        sums=selwei.sum(axis=2)
+                        sums[sums==0]=1  # avoid division 0/0 
                         colname='AWSI'   if len(ws)==1  else  'AWSI.'+w
                         out[(gaps_arg, colname)]=(  ( (eq_matrix * selwei ).sum(axis=2)
-                                                      /  selwei.sum(axis=2) )
+                                                      /  sums )
                                                     .mean(axis=1) )
             if len(gaps)==1:
                 out.columns=out.columns.droplevel('gaps')

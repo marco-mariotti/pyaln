@@ -72,13 +72,14 @@ def sequence_identity(a, b, gaps='y'):
                     break
     elif gaps=='a':
         count_identical=sum([int(ca == b[i])    for i,ca in enumerate(a)])        
-        return count_identical/len(a)        
+        return count_identical/len(a)        if len(a) else 0.0
     else:
         raise Exception('sequence_identity ERROR gaps argument must be one of {a, y, n, t}')
 
     exclude_pos=set(pos_to_remove)
-    count_identical=sum([int(ca == b[i] and ca!='-' )    for i,ca in enumerate(a) if not i in exclude_pos])  
-    return count_identical/( len(a) - len(exclude_pos) )
+    count_identical=sum([int(ca == b[i] and ca!='-' )    for i,ca in enumerate(a) if not i in exclude_pos])
+    denominator= len(a) - len(exclude_pos) 
+    return count_identical/denominator if denominator else 0.0
 
 def weighted_sequence_identity(a, b, weights, gaps='y'):
     """Compute the sequence identity between two sequences, different positions differently
@@ -160,16 +161,16 @@ def weighted_sequence_identity(a, b, weights, gaps='y'):
     elif gaps=='a':
         total_weight=   sum( weights )            
         count_identical=sum([int(ca == b[i])*weights[i]    for i,ca in enumerate(a)])        
-        return count_identical/total_weight
+        return count_identical/total_weight if total_weight else 0.0
     else:
         raise Exception('sequence_identity ERROR gaps argument must be one of {a, y, n, t}')
 
     exclude_pos=set(pos_to_remove)
     actual_weights=[w for i,w in enumerate(weights)   if not i in exclude_pos]
-    total_weight=   sum( actual_weights ) 
+    total_weight=   sum( actual_weights )    
     
     count_identical=sum([int(ca == b[i] and ca!='-' )*weights[i]    for i,ca in enumerate(a) if not i in exclude_pos])  
-    return count_identical/( total_weight )
+    return count_identical/( total_weight ) if total_weight else 0.0
 
 
 def gap_selector(npt, nps, gaps):
@@ -200,10 +201,12 @@ def sequence_identity_matrix(npt, nps, selector=None, gaps=None, eq_matrix=None)
         selector=gap_selector(npt, nps, gaps)
     if eq_matrix is None:
         eq_matrix=np.char.equal( nps, npt[:,np.newaxis] )
-        
+
+    sums=selector.sum(axis=2)
+    sums[sums==0]=1  # avoid division 0/0
     return ( (eq_matrix & selector).sum(axis=2)  /
              # below: matrix of length of alignments, i.e. the positions actually used for each comparison
-             selector.sum(axis=2) )
+             sums )
     
 
 

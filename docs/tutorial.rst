@@ -279,7 +279,7 @@ For example, let's remove all columns with at least 50% gaps::
 Another common operation is **alignment concatenation**: two or more alignments corresponding to different gene families, but
 coming from the same set of species, are combined into one. Visually, alignment concatenation corresponds to
 stacking one alignment next to the other horizontally. This is achieved in pyaln by adding 
-two Alignment instances using with a ``+`` operator
+two Alignment instances with the ``+`` operator
 (or analogously, calling the :func:`~pyaln.Alignment.concatenate` function).
 
   >>> ali2=Alignment([ ('seq1', 'AAATAAAA'), ('seq2'  , '-AAGAAAG'), ('seq3', 'ACATAAAC')])

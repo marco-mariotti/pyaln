@@ -421,7 +421,7 @@ class Alignment:
         return len(self._ord)
     
     def rename(self,d):
-        """Rename alignment sequences.
+        """Rename alignment sequences in-place.
 
         The input alignment names are renamed. "d" is a dictionary where values must be unique (1-to-1). 
         Sequence names not specified in "d" will be left as-is.
@@ -433,8 +433,7 @@ class Alignment:
 
         Returns
         -------
-        Alignment
-           The function does not return anything because sequence names are renamed inplace.
+        None
 
         Examples
         --------

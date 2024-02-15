@@ -452,6 +452,44 @@ class Alignment:
         ali_length: length of the alignment (i.e. number of columns)
         """
         return len(self._ord)
+    
+    def rename(self,d):
+        """Rename alignment sequences in-place.
+
+        The input alignment names are renamed. "d" is a dictionary where values must be unique (1-to-1). 
+        Sequence names not specified in "d" will be left as-is.
+
+        Parameters
+        ----------
+        d : dict
+           Dictionary containing old_name : new_name. 
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> ali=Alignment([ ('seq1', 'ATTCG-'), ('seq2', '--TTGG'), ('seq3', 'ATTCG-')])
+        >>> ali
+        # Alignment of 3 sequences and 6 positions
+        ATTCG- seq1
+        --TTGG seq2
+        ATTCG- seq3
+
+        >>> ali.rename({'seq1':'sequence1'})
+        >>> ali
+        # Alignment of 3 sequences and 6 positions
+        ATTCG- sequence1
+        --TTGG seq2
+        ATTCG- seq3
+
+        """
+        self._ord = [d[n] if n in d else n for n in self._ord]
+
+        self._seqs={d.get(n, n):s for n,s in self._seqs.items()}
+
+        self._desc={d.get(n, n):des for n,des in self._desc.items()}
 
     @property
     def shape(self):
